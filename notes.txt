@@ -1,0 +1,7 @@
+Tables:
+  - Category
+  - Chore
+  - Item
+  - Event
+
+

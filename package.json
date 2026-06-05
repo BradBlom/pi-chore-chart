@@ -1,0 +1,25 @@
+{
+  "name": "pi-chore-chart",
+  "version": "1.0.0",
+  "description": "Chore chart app meant for a small touchscreen",
+  "homepage": "https://github.com/BradBlom/pi-chore-chart#readme",
+  "bugs": {
+    "url": "https://github.com/BradBlom/pi-chore-chart/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BradBlom/pi-chore-chart.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0",
+    "express": "^5.2.1",
+    "jest": "^30.4.2"
+  }
+}
