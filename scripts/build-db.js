@@ -1,0 +1,65 @@
+import Database from 'better-sqlite3';
+
+const db = new Database('database.db', { verbose: console.log });
+db.pragma('journal_mode = WAL');
+
+const statements = [
+  `CREATE TABLE IF NOT EXISTS server_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    time_zone TEXT NOT NULL,
+    day_begins_hr INTEGER NOT NULL,
+    admin_passcode TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS member (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    long_name TEXT NOT NULL,
+    short_name TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    is_admin INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS team (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    long_name TEXT NOT NULL,
+    short_name TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1
+  )`,
+  // w: weekly, d: daily
+  `CREATE TABLE IF NOT EXISTS chore_template (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    interval TEXT NOT NULL CHECK (interval IN ('w', 'd')),
+    restarts_on TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS chore_template_assignment (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fk_chore_template_id INTEGER NOT NULL,
+    fk_member_id INTEGER,
+    fk_team_id INTEGER,
+    FOREIGN KEY (fk_chore_template_id) REFERENCES chore_template(id),
+    FOREIGN KEY (fk_member_id) REFERENCES member(id),
+    FOREIGN KEY (fk_team_id) REFERENCES team(id)
+  )`,
+  // i: incomplete, c: complete, u: unsure, r: ready
+  `CREATE TABLE IF NOT EXISTS chore (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    fk_member_id INTEGER,
+    fk_team_id INTEGER,
+    status TEXT NOT NULL DEFAULT 'incomplete' CHECK (status IN ('i', 'c', 'u', 'r')),
+    begins_on TEXT,
+    ends_on TEXT,
+    FOREIGN KEY (fk_member_id) REFERENCES member(id),
+    FOREIGN KEY (fk_team_id) REFERENCES team(id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS event (
+    id INTEGER PRIMARY KEY AUTOINCREMENT
+  )`
+];
+
+for (const statement of statements) {
+  db.exec(statement);
+}
+
+console.log('Database schema created successfully.');
+db.close();
+

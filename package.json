@@ -16,6 +16,7 @@
   "main": "index.js",
   "scripts": {
     "build-db": "node scripts/build-db.js",
+    "seed-db": "node scripts/seed-db.js",
     "test": "jest"
   },
   "dependencies": {

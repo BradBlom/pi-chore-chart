@@ -1,50 +1,50 @@
 Tables Overview:
-  - Server_Settings
-  - Member
-  - Group
-  - Chore_Template
-  - Chore_Template_Assignment
-  - Chore
-  - Event
+  - server_settings
+  - member
+  - team
+  - chore_template
+  - chore_template_assignment
+  - chore
+  - event
 
 
 Table Details:
-  - Server_Settings
+  - server_settings
     - id
     - time_zone
     - day_begins_hr
     - admin_passcode
 
-  - Member
+  - member
     - id
     - long_name
     - short_name
     - is_active
     - is_admin
   
-  - Group
+  - team
     - id
     - long_name
     - short_name
     - is_active
   
-  - Chore_Template
+  - chore_template
     - id
     - name
     - interval (weekly vs daily)
     - restarts_on (00-23 for daily and 0.00-6.23 for weekly)
   
-  - Chore_Template_Assignment
+  - chore_template_assignment
     - id
-    - chore_teamplate_id
-    - member_id
-    - group_id
+    - fk_chore_template_id
+    - fk_member_id
+    - fk_team_id
 
-  - Chore
+  - chore
     - id
     - name
-    - member_id
-    - group_id
+    - fk_member_id
+    - fk_team_id
     - status (incomplete, complete, unsure, ready)
     - begins_on
     - ends_on
