@@ -1,2 +1,5 @@
 node_modules
-scripts/build-db.js
+
+database.db
+
+scripts/seed-db.js
