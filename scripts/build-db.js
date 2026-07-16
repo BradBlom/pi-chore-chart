@@ -23,11 +23,10 @@ const statements = [
     short_name TEXT NOT NULL,
     is_active INTEGER NOT NULL DEFAULT 1
   )`,
-  // w: weekly, d: daily
+  // restarts_on values: 'daily', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'
   `CREATE TABLE IF NOT EXISTS chore_template (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    interval TEXT NOT NULL CHECK (interval IN ('w', 'd')),
     restarts_on TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS chore_template_assignment (

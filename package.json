@@ -17,6 +17,7 @@
   "scripts": {
     "build-db": "node scripts/build-db.js",
     "seed-db": "node scripts/seed-db.js",
+    "seed-db-example": "node scripts/seed-db-example.js",
     "test": "jest"
   },
   "dependencies": {
