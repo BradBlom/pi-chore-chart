@@ -18,7 +18,8 @@
     "build-db": "node scripts/build-db.js",
     "seed-db": "node scripts/seed-db.js",
     "seed-db-example": "node scripts/seed-db-example.js",
-    "test": "jest"
+    "test": "jest",
+    "start": "node src/app.js"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.2",

@@ -1,6 +1,6 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -12,7 +12,7 @@ router.get('/', (req, res) => {
 });
 
 router.get('/dashboard', (req, res) => {
-  res.sendFile(`${__dirname}/views/dashboard.html`);
+  res.sendFile(join(__dirname, '../views/dashboard.html'));
 });
 
 export default router;
