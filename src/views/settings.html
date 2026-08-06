@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Settings - Pi Chore Chart</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
+<link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="w3-top">
+  <div class="w3-bar w3-theme w3-top w3-left-align w3-large">
+    <a href="#" class="w3-bar-item w3-button w3-theme-l1">Pi Chore Chart</a>
+    <div class="w3-right">
+      <a href="/app/dashboard" class="w3-bar-item w3-button w3-hover-white">Back</a>
+    </div>
+  </div>
+</div>
+
+<div class="w3-main">
+  <div id="settings-content" class="w3-container w3-padding-32"></div>
+
+  <footer id="myFooter">
+    <div class="w3-container w3-theme-l2 w3-padding-32">
+      <h4>Footer</h4>
+    </div>
+
+    <div class="w3-container w3-theme-l1">
+      <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+    </div>
+  </footer>
+
+<!-- END MAIN -->
+</div>
+
+<div id="template-modal" class="w3-modal" style="display:none">
+  <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+    <header class="w3-container w3-theme">
+      <span class="w3-button w3-display-topright" onclick="closeTemplateModal()">&times;</span>
+      <h2 id="modal-title">Create chore template</h2>
+    </header>
+
+    <div class="w3-container w3-padding">
+      <div id="modal-message" class="w3-panel w3-pale-yellow w3-border w3-margin-bottom" style="display:none"></div>
+      <form id="template-form" class="w3-container">
+        <input type="hidden" id="template-id" />
+
+        <label class="w3-text-dark-grey">Name</label>
+        <input id="template-name" class="w3-input w3-border w3-margin-bottom" required />
+
+        <label class="w3-text-dark-grey">Restart schedule</label>
+        <input id="template-restarts-on" class="w3-input w3-border" required />
+      </form>
+    </div>
+
+    <footer class="w3-container w3-padding w3-border-top">
+      <button type="submit" form="template-form" class="w3-button w3-theme">Save</button>
+      <button type="button" class="w3-button w3-white w3-border" onclick="closeTemplateModal()">Cancel</button>
+    </footer>
+  </div>
+</div>
+
+<script src="./settings.js"></script>
+</body>
+</html>

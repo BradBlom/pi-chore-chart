@@ -15,4 +15,8 @@ router.get('/dashboard', (req, res) => {
   res.sendFile(join(__dirname, '../views/dashboard.html'));
 });
 
+router.get('/settings', (req, res) => {
+  res.sendFile(join(__dirname, '../views/settings.html'));
+});
+
 export default router;

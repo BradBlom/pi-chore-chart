@@ -1,8 +1,9 @@
 import db from '../../shared/db.js';
+import { transformToApi, transformToDb } from '../transform.js';
 
 export const getAllTeams = (req, res) => {
   try {
-    const teams = db.prepare('SELECT * FROM team').all();
+    const teams = db.prepare('SELECT * FROM team').all().map(transformToApi);
     res.json(teams);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -16,7 +17,7 @@ export const getTeam = (req, res) => {
     if (!team) {
       return res.status(404).json({ error: 'Team not found' });
     }
-    res.json(team);
+    res.json(transformToApi(team));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -24,13 +25,14 @@ export const getTeam = (req, res) => {
 
 export const createTeam = (req, res) => {
   try {
-    const { long_name, short_name, is_active } = req.body;
+    const payload = transformToDb(req.body);
+    const { long_name, short_name, is_active } = payload;
     const result = db.prepare('INSERT INTO team (long_name, short_name, is_active) VALUES (?, ?, ?)').run(
       long_name,
       short_name,
-      is_active || 1
+      is_active === undefined ? 1 : is_active
     );
-    res.status(201).json({ id: result.lastInsertRowid, long_name, short_name, is_active });
+    res.status(201).json(transformToApi({ id: result.lastInsertRowid, ...payload }));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -39,7 +41,8 @@ export const createTeam = (req, res) => {
 export const updateTeam = (req, res) => {
   try {
     const { id } = req.params;
-    const { long_name, short_name, is_active } = req.body;
+    const payload = transformToDb(req.body);
+    const { long_name, short_name, is_active } = payload;
     const result = db.prepare('UPDATE team SET long_name = ?, short_name = ?, is_active = ? WHERE id = ?').run(
       long_name,
       short_name,
@@ -49,7 +52,7 @@ export const updateTeam = (req, res) => {
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Team not found' });
     }
-    res.json({ id, long_name, short_name, is_active });
+    res.json(transformToApi({ id, ...payload }));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

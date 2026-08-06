@@ -1,8 +1,9 @@
 import db from '../../shared/db.js';
+import { transformToApi, transformToDb } from '../transform.js';
 
 export const getAllMembers = (req, res) => {
   try {
-    const members = db.prepare('SELECT * FROM member').all();
+    const members = db.prepare('SELECT * FROM member').all().map(transformToApi);
     res.json(members);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -16,7 +17,7 @@ export const getMember = (req, res) => {
     if (!member) {
       return res.status(404).json({ error: 'Member not found' });
     }
-    res.json(member);
+    res.json(transformToApi(member));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -24,14 +25,15 @@ export const getMember = (req, res) => {
 
 export const createMember = (req, res) => {
   try {
-    const { long_name, short_name, is_active, is_admin } = req.body;
+    const payload = transformToDb(req.body);
+    const { long_name, short_name, is_active, is_admin } = payload;
     const result = db.prepare('INSERT INTO member (long_name, short_name, is_active, is_admin) VALUES (?, ?, ?, ?)').run(
       long_name,
       short_name,
-      is_active || 1,
-      is_admin || 0
+      is_active === undefined ? 1 : is_active,
+      is_admin === undefined ? 0 : is_admin
     );
-    res.status(201).json({ id: result.lastInsertRowid, long_name, short_name, is_active, is_admin });
+    res.status(201).json(transformToApi({ id: result.lastInsertRowid, ...payload }));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -40,7 +42,8 @@ export const createMember = (req, res) => {
 export const updateMember = (req, res) => {
   try {
     const { id } = req.params;
-    const { long_name, short_name, is_active, is_admin } = req.body;
+    const payload = transformToDb(req.body);
+    const { long_name, short_name, is_active, is_admin } = payload;
     const result = db.prepare('UPDATE member SET long_name = ?, short_name = ?, is_active = ?, is_admin = ? WHERE id = ?').run(
       long_name,
       short_name,
@@ -51,7 +54,7 @@ export const updateMember = (req, res) => {
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Member not found' });
     }
-    res.json({ id, long_name, short_name, is_active, is_admin });
+    res.json(transformToApi({ id, ...payload }));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
