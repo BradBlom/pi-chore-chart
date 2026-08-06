@@ -136,33 +136,140 @@ function openTemplateModal(template = null) {
 }
 
 function openAssignModal(template) {
-  const modal = document.getElementById('template-modal');
-  const modalTitle = document.getElementById('modal-title');
-  const form = document.getElementById('template-form');
-  const message = document.getElementById('modal-message');
-  const nameInput = document.getElementById('template-name');
-  const restartsInput = document.getElementById('template-restarts-on');
-  const templateIdInput = document.getElementById('template-id');
+  const modal = document.getElementById('assignment-modal');
+  const info = document.getElementById('assignment-template-info');
+  const assignmentList = document.getElementById('assignment-list');
 
-  if (!modal || !modalTitle || !form || !message || !nameInput || !restartsInput || !templateIdInput) {
+  if (!modal || !info || !assignmentList) {
     return;
   }
 
-  editingTemplateId = template ? template.id : null;
-  modalMode = 'assign';
-  modalTitle.textContent = 'Assign chore template';
-  nameInput.value = template?.name || '';
-  restartsInput.value = template?.restartsOn || template?.restarts_on || '';
-  templateIdInput.value = template?.id || '';
-  form.reset();
-  nameInput.value = template?.name || '';
-  restartsInput.value = template?.restartsOn || template?.restarts_on || '';
-  templateIdInput.value = template?.id || '';
+  const name = template?.name || 'Unnamed template';
+  const restartsOn = template?.restartsOn || template?.restarts_on || 'No schedule';
 
-  message.textContent = 'Assignment workflow is coming soon.';
-  message.className = 'w3-panel w3-pale-yellow w3-border w3-margin-bottom';
-  message.style.display = 'block';
+  info.innerHTML = `
+    <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+    <p><strong>Restart schedule:</strong> ${escapeHtml(restartsOn)}</p>
+  `;
+
+  assignmentList.style.display = 'block';
+  assignmentList.innerHTML = '<p>Loading assignments...</p>';
   modal.style.display = 'block';
+
+  loadTemplateAssignments(template.id, assignmentList);
+}
+
+async function loadTemplateAssignments(templateId, container) {
+  try {
+    const response = await fetch(`/api/chore-assignments?fkChoreTemplateId=${encodeURIComponent(templateId)}`);
+    if (!response.ok) {
+      throw new Error('Unable to load assignments');
+    }
+
+    const assignments = await response.json();
+    renderAssignmentList(assignments, container, templateId);
+  } catch (error) {
+    console.error('Error loading chore assignments:', error);
+    container.innerHTML = '<p class="w3-text-red">Unable to load assignments.</p>';
+  }
+}
+
+function renderAssignmentList(assignments, container, templateId) {
+  if (!container) {
+    return;
+  }
+
+  const memberAssignments = assignments.filter((assignment) => assignment.fkMemberId !== undefined && assignment.fkMemberId !== null);
+  const teamAssignments = assignments.filter((assignment) => assignment.fkTeamId !== undefined && assignment.fkTeamId !== null);
+
+  if ((!memberAssignments.length && !teamAssignments.length) || !Array.isArray(assignments)) {
+    container.innerHTML = '<p>No assignments found.</p>';
+    return;
+  }
+
+  const memberRows = memberAssignments.map((assignment) => {
+    const assignmentId = assignment.id ? `ID ${assignment.id}` : 'Assignment';
+    return `
+      <tr>
+        <td>${escapeHtml(assignmentId)}</td>
+        <td>${escapeHtml(String(assignment.fkMemberId))}</td>
+        <td class="w3-right-align">
+          <button class="w3-button w3-white w3-border w3-small" onclick="removeAssignment(${assignment.id}, ${templateId})">Remove</button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  const teamRows = teamAssignments.map((assignment) => {
+    const assignmentId = assignment.id ? `ID ${assignment.id}` : 'Assignment';
+    return `
+      <tr>
+        <td>${escapeHtml(assignmentId)}</td>
+        <td>${escapeHtml(String(assignment.fkTeamId))}</td>
+        <td class="w3-right-align">
+          <button class="w3-button w3-white w3-border w3-small" onclick="removeAssignment(${assignment.id}, ${templateId})">Remove</button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="w3-container w3-padding-small">
+      <div class="w3-margin-bottom">
+        <button class="w3-button w3-small w3-theme">Create</button>
+      </div>
+      <table class="w3-table w3-striped w3-bordered w3-white">
+        <thead>
+          <tr>
+            <th>Assignment</th>
+            <th>Member</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${memberRows || '<tr><td colspan="3">No member assignments</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+    <div class="w3-container w3-padding-small">
+      <div class="w3-margin-bottom">
+        <button class="w3-button w3-small w3-theme">Create</button>
+      </div>
+      <table class="w3-table w3-striped w3-bordered w3-white">
+        <thead>
+          <tr>
+            <th>Assignment</th>
+            <th>Team</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${teamRows || '<tr><td colspan="3">No team assignments</td></tr>'}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+async function removeAssignment(assignmentId, templateId) {
+  if (!assignmentId) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/chore-assignments/${assignmentId}`, { method: 'DELETE' });
+    if (!response.ok) {
+      throw new Error('Unable to remove assignment');
+    }
+
+    const container = document.getElementById('assignment-list');
+    if (container) {
+      loadTemplateAssignments(templateId, container);
+    }
+  } catch (error) {
+    console.error('Error removing assignment:', error);
+    const container = document.getElementById('assignment-list');
+    if (container) {
+      container.innerHTML = '<p class="w3-text-red">Unable to remove assignment.</p>';
+    }
+  }
 }
 
 function closeTemplateModal() {
@@ -185,6 +292,25 @@ function closeTemplateModal() {
 
   editingTemplateId = null;
   modalMode = 'create';
+}
+
+function closeAssignmentModal() {
+  const modal = document.getElementById('assignment-modal');
+  const info = document.getElementById('assignment-template-info');
+  const assignmentList = document.getElementById('assignment-list');
+
+  if (modal) {
+    modal.style.display = 'none';
+  }
+
+  if (info) {
+    info.innerHTML = '';
+  }
+
+  if (assignmentList) {
+    assignmentList.style.display = 'none';
+    assignmentList.innerHTML = '';
+  }
 }
 
 document.getElementById('template-form')?.addEventListener('submit', async (event) => {
@@ -292,3 +418,4 @@ function escapeHtml(value) {
 }
 
 window.closeTemplateModal = closeTemplateModal;
+window.closeAssignmentModal = closeAssignmentModal;

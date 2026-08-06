@@ -3,7 +3,16 @@ import { transformToApi, transformToDb } from '../transform.js';
 
 export const getAllChoreAssignments = (req, res) => {
   try {
-    const choreAssignments = db.prepare('SELECT * FROM chore_template_assignment').all().map(transformToApi);
+    const inpChoreTemplateId = req.query['fkChoreTemplateId'];
+    let query = 'SELECT * FROM chore_template_assignment';
+    const params = [];
+
+    if (inpChoreTemplateId !== undefined) {
+      query += ' WHERE fk_chore_template_id = ?';
+      params.push(inpChoreTemplateId);
+    }
+
+    const choreAssignments = db.prepare(query).all(...params).map(transformToApi);
     res.json(choreAssignments);
   } catch (error) {
     res.status(500).json({ error: error.message });

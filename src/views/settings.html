@@ -67,6 +67,24 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
   </div>
 </div>
 
+<div id="assignment-modal" class="w3-modal" style="display:none">
+  <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+    <header class="w3-container w3-theme">
+      <span class="w3-button w3-display-topright" onclick="closeAssignmentModal()">&times;</span>
+      <h2 id="assignment-modal-title">Chore template assignments</h2>
+    </header>
+
+    <div class="w3-container w3-padding">
+      <div id="assignment-template-info" class="w3-panel w3-white w3-border w3-margin-bottom"></div>
+      <div id="assignment-list" class="w3-panel w3-white w3-border w3-margin-bottom" style="display:none"></div>
+    </div>
+
+    <footer class="w3-container w3-padding w3-border-top">
+      <button type="button" class="w3-button w3-white w3-border" onclick="closeAssignmentModal()">Close</button>
+    </footer>
+  </div>
+</div>
+
 <script src="./settings.js"></script>
 </body>
 </html>
