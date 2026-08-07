@@ -184,13 +184,13 @@ function renderAssignmentList(assignments, container, templateId) {
     return;
   }
 
-  const memberAssignments = assignments.filter((assignment) => assignment.fkMemberId !== undefined && assignment.fkMemberId !== null);
-  const teamAssignments = assignments.filter((assignment) => assignment.fkTeamId !== undefined && assignment.fkTeamId !== null);
-
-  if ((!memberAssignments.length && !teamAssignments.length) || !Array.isArray(assignments)) {
+  if (!Array.isArray(assignments)) {
     container.innerHTML = '<p>No assignments found.</p>';
     return;
   }
+
+  const memberAssignments = assignments.filter((assignment) => assignment.fkMemberId !== undefined && assignment.fkMemberId !== null);
+  const teamAssignments = assignments.filter((assignment) => assignment.fkTeamId !== undefined && assignment.fkTeamId !== null);
 
   const memberRows = memberAssignments.map((assignment) => `
       <tr>
