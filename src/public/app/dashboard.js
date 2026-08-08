@@ -39,24 +39,20 @@ function renderDashboard(container, members, teams, chores) {
   const memberSections = members.map((member) => {
     const memberChores = chores.filter((chore) => chore.fkMemberId === member.id || chore.fk_member_id === member.id);
     return `
-      <div class="w3-card w3-margin-bottom w3-padding">
+      <a class="w3-card w3-margin-bottom w3-padding" href="/app/members/${member.id}/chore-list" style="display:block; text-decoration:none; color:inherit;">
         <h3 class="w3-text-teal">${escapeHtml(getDisplayName(member))}</h3>
-        <p><strong>Short name:</strong> ${escapeHtml(getShortName(member))}</p>
-        <h4>Chores</h4>
-        ${memberChores.length > 0 ? `<ul>${memberChores.map((chore) => `<li>${escapeHtml(getChoreName(chore))}</li>`).join('')}</ul>` : '<p>No chores assigned.</p>'}
-      </div>
+        ${renderProgressBar(memberChores)}
+      </a>
     `;
   }).join('');
 
   const teamSections = teams.map((team) => {
     const teamChores = chores.filter((chore) => chore.fkTeamId === team.id || chore.fk_team_id === team.id);
     return `
-      <div class="w3-card w3-margin-bottom w3-padding">
+      <a class="w3-card w3-margin-bottom w3-padding" href="/app/teams/${team.id}/chore-list" style="display:block; text-decoration:none; color:inherit;">
         <h3 class="w3-text-teal">${escapeHtml(getDisplayName(team))}</h3>
-        <p><strong>Short name:</strong> ${escapeHtml(getShortName(team))}</p>
-        <h4>Chores</h4>
-        ${teamChores.length > 0 ? `<ul>${teamChores.map((chore) => `<li>${escapeHtml(getChoreName(chore))}</li>`).join('')}</ul>` : '<p>No chores assigned.</p>'}
-      </div>
+        ${renderProgressBar(teamChores)}
+      </a>
     `;
   }).join('');
 
@@ -72,6 +68,32 @@ function renderDashboard(container, members, teams, chores) {
       </div>
     </div>
   `;
+}
+
+function renderProgressBar(chores) {
+  const total = chores.length;
+  if (total === 0) {
+    return '<div class="w3-light-grey w3-round w3-margin-bottom"><div class="w3-container w3-round w3-grey" style="width:100%">No chores</div></div>';
+  }
+
+  const completed = chores.filter((chore) => isChoreComplete(chore)).length;
+  const percent = Math.round((completed / total) * 100);
+  const barColor = percent >= 100
+    ? 'w3-green'
+    : percent >= 66
+      ? 'w3-blue'
+      : percent >= 33
+        ? 'w3-yellow'
+        : 'w3-dark-grey';
+  return `
+    <div class="w3-light-grey w3-round w3-margin-bottom">
+      <div class="w3-container w3-round ${barColor}" style="width:${percent}%">${percent}%</div>
+    </div>
+  `;
+}
+
+function isChoreComplete(chore) {
+  return chore.status === 'c' || chore.status === 'complete' || chore.status === 'done';
 }
 
 function getDisplayName(item) {

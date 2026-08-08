@@ -48,9 +48,18 @@ function renderSettingsPage() {
       <td>${escapeHtml(template.name || 'Untitled')}</td>
       <td>${escapeHtml(template.restartsOn || template.restarts_on || '—')}</td>
       <td>
-        <button class="w3-button w3-small w3-blue" data-action="edit" data-id="${template.id}">Edit</button>
-        <button class="w3-button w3-small w3-red" data-action="delete" data-id="${template.id}">Delete</button>
-        <button class="w3-button w3-small w3-theme" data-action="assign" data-id="${template.id}">Assign</button>
+        <button class="w3-button w3-small w3-black" data-action="assign" data-id="${template.id}">
+          <i class="fa fa-exchange w3-margin-right w3-text-blue" aria-hidden="true"></i>
+          <span class="w3-hide-medium w3-hide-small">Assign</span>
+        </button>
+        <button class="w3-button w3-small w3-black" data-action="edit" data-id="${template.id}">
+          <i class="fa fa-edit w3-margin-right w3-text-blue" aria-hidden="true"></i>
+          <span class="w3-hide-medium w3-hide-small">Edit</span>
+        </button>
+        <button class="w3-button w3-small w3-black" data-action="delete" data-id="${template.id}">
+          <i class="fa fa-close w3-margin-right w3-text-red" aria-hidden="true"></i>
+          <span class="w3-hide-medium w3-hide-small">Delete</span>
+        </button>
       </td>
     </tr>
   `).join('');
@@ -59,8 +68,11 @@ function renderSettingsPage() {
     <div class="w3-row-padding">
       <div class="w3-col s12">
         <div class="w3-margin-bottom">
-          <h2 style="margin:0 0 8px 0;">Chore templates</h2>
-          <button id="create-template-btn" class="w3-button w3-theme">Create</button>
+          <h2 style="margin:0 0 8px 0;">Chore Templates</h2>
+          <button id="create-template-btn" class="w3-button w3-small w3-black">
+            <i class="fa fa-plus w3-margin-right w3-text-green" aria-hidden="true"></i>
+            <span class="w3-hide-medium w3-hide-small">Create</span>
+          </button>
         </div>
         <div id="settings-message" class="w3-panel w3-pale-green w3-border w3-margin-bottom" style="display:none"></div>
         <table class="w3-table w3-striped w3-bordered w3-white">
@@ -125,12 +137,12 @@ function openTemplateModal(template = null) {
   message.textContent = '';
 
   if (template) {
-    modalTitle.textContent = 'Edit chore template';
+    modalTitle.textContent = 'Edit Chore Template';
     nameInput.value = template.name || '';
     restartsInput.value = template.restartsOn || template.restarts_on || '';
     templateIdInput.value = template.id;
   } else {
-    modalTitle.textContent = 'Create chore template';
+    modalTitle.textContent = 'Create Chore Template';
     form.reset();
     templateIdInput.value = '';
   }
@@ -197,8 +209,11 @@ function renderAssignmentList(assignments, container, templateId) {
         <td class="member-assignment-name" data-member-id="${assignment.fkMemberId}">
           <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
         </td>
-        <td class="w3-right-align">
-          <button class="w3-button w3-white w3-border w3-small" onclick="removeAssignment(${assignment.id}, ${templateId})">Remove</button>
+        <td>
+          <button class="w3-button w3-small w3-black" onclick="removeAssignment(${assignment.id}, ${templateId})">
+            <i class="fa fa-close w3-margin-right w3-text-red" aria-hidden="true"></i>
+            <span class="w3-hide-medium w3-hide-small">Remove</span>
+          </button>
         </td>
       </tr>`).join('');
 
@@ -207,15 +222,22 @@ function renderAssignmentList(assignments, container, templateId) {
         <td class="team-assignment-name" data-team-id="${assignment.fkTeamId}">
           <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
         </td>
-        <td class="w3-right-align">
-          <button class="w3-button w3-white w3-border w3-small" onclick="removeAssignment(${assignment.id}, ${templateId})">Remove</button>
+        <td>
+          <button class="w3-button w3-small w3-black" onclick="removeAssignment(${assignment.id}, ${templateId})">
+            <i class="fa fa-close w3-margin-right w3-text-red" aria-hidden="true"></i>
+            <span class="w3-hide-medium w3-hide-small">Remove</span>
+          </button>
         </td>
       </tr>`).join('');
 
   container.innerHTML = `
     <div class="w3-container w3-padding-small">
       <div class="w3-margin-bottom">
-        <button class="w3-button w3-small w3-theme" data-action="create-member-assignment">Create member assignment</button>
+        <button class="w3-button w3-small w3-black" data-action="create-member-assignment">
+          <i class="fa fa-plus w3-margin-right w3-text-green" aria-hidden="true"></i>
+          <i class="fa fa-user w3-margin-right w3-text-green" aria-hidden="true"></i>
+          <span class="w3-hide-medium w3-hide-small">Create member assignment</span>
+        </button>
         <div class="w3-margin-top" data-member-assignment-picker></div>
       </div>
       <table class="w3-table w3-striped w3-bordered w3-white">
@@ -230,9 +252,13 @@ function renderAssignmentList(assignments, container, templateId) {
         </tbody>
       </table>
     </div>
-    <div class="w3-container w3-padding-small">
+    <div class="w3-container w3-padding-small" style="margin-top:32px">
       <div class="w3-margin-bottom">
-        <button class="w3-button w3-small w3-theme">Create team assignment</button>
+        <button class="w3-button w3-small w3-black">
+          <i class="fa fa-plus w3-margin-right w3-text-green" aria-hidden="true"></i>
+          <i class="fa fa-users w3-margin-right w3-text-green" aria-hidden="true"></i>
+          <span class="w3-hide-medium w3-hide-small">Create team assignment</span>
+        </button>
       </div>
       <table class="w3-table w3-striped w3-bordered w3-white">
         <thead>
