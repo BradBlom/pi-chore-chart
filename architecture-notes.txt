@@ -46,8 +46,7 @@ Table Details:
     - fk_member_id
     - fk_team_id
     - status (incomplete, complete, unsure, ready)
-    - begins_on
-    - ends_on
+    - curr_day
 
 
 

@@ -2,6 +2,7 @@ import express from 'express';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { initDayIfNeeded } from '../shared/utils/processes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -13,6 +14,7 @@ router.get('/', (req, res) => {
 });
 
 router.get('/dashboard', (req, res) => {
+  initDayIfNeeded();
   res.sendFile(join(__dirname, '../views/dashboard.html'));
 });
 

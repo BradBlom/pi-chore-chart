@@ -5,7 +5,6 @@ db.pragma('journal_mode = WAL');
 
 const recs_server_settings = {
     singleEntry: {
-        time_zone: 'America/Chicago',
         day_begins_hr: 5,
         admin_passcode: 'admin123'
     }
@@ -67,41 +66,37 @@ const recs_chore = {
         memberKey: 'alice',
         teamKey: null,
         status: 'c',
-        begins_on: '2026-07-15',
-        ends_on: '2026-07-15'
+        curr_day: '2026-07-15'
     },
     bobBrushTeeth: {
         name: 'Brush teeth',
         memberKey: 'bob',
         teamKey: null,
         status: 'i',
-        begins_on: '2026-07-15',
-        ends_on: null
+        curr_day: '2026-07-15'
     },
     kitchenWashDishes: {
         name: 'Wash dishes',
         memberKey: null,
         teamKey: 'kitchen',
         status: 'r',
-        begins_on: '2026-07-14',
-        ends_on: null
+        curr_day: '2026-07-14'
     },
     kitchenCleanCounters: {
         name: 'Clean counters',
         memberKey: null,
         teamKey: 'kitchen',
         status: 'u',
-        begins_on: '2026-07-16',
-        ends_on: null
+        curr_day: '2026-07-16'
     }
 };
 
 // Insert sample server_settings
 const serverSettingsStmt = db.prepare(`
-  INSERT INTO server_settings (time_zone, day_begins_hr, admin_passcode)
-  VALUES (?, ?, ?)
+  INSERT INTO server_settings (day_begins_hr, admin_passcode)
+  VALUES (?, ?)
 `);
-const serverSettingsResult = serverSettingsStmt.run(recs_server_settings.singleEntry.time_zone, recs_server_settings.singleEntry.day_begins_hr, recs_server_settings.singleEntry.admin_passcode);
+const serverSettingsResult = serverSettingsStmt.run(recs_server_settings.singleEntry.day_begins_hr, recs_server_settings.singleEntry.admin_passcode);
 recs_server_settings.singleEntry.id = serverSettingsResult.lastInsertRowid;
 console.log('Inserted server_settings with id:', recs_server_settings.singleEntry.id);
 
@@ -156,14 +151,14 @@ recs_chore_template_assignment.forEach((assignment, index) => {
 
 // Insert sample chores
 const choreStmt = db.prepare(`
-  INSERT INTO chore (name, fk_member_id, fk_team_id, status, begins_on, ends_on)
-  VALUES (?, ?, ?, ?, ?, ?)
+  INSERT INTO chore (name, fk_member_id, fk_team_id, status, curr_day)
+  VALUES (?, ?, ?, ?, ?)
 `);
 Object.keys(recs_chore).forEach(key => {
   const chore = recs_chore[key];
   const memberId = chore.memberKey ? recs_members[chore.memberKey].id : null;
   const teamId = chore.teamKey ? recs_team[chore.teamKey].id : null;
-  const result = choreStmt.run(chore.name, memberId, teamId, chore.status, chore.begins_on, chore.ends_on);
+  const result = choreStmt.run(chore.name, memberId, teamId, chore.status, chore.curr_day);
   chore.id = result.lastInsertRowid;
   console.log(`Inserted chore (${key}) with id:`, chore.id);
 });

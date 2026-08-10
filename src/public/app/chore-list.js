@@ -168,13 +168,12 @@ async function updateChoreStatus(choreId, status) {
   }
 
   const payload = {
-    ...existingChore,
     status
   };
 
   try {
     const response = await fetch(`/api/chores/${encodeURIComponent(choreId)}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });

@@ -6,8 +6,9 @@ db.pragma('journal_mode = WAL');
 const statements = [
   `CREATE TABLE IF NOT EXISTS server_settings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    time_zone TEXT NOT NULL,
     day_begins_hr INTEGER NOT NULL,
+    init_day_status TEXT NOT NULL DEFAULT 'ready' CHECK (init_day_status IN ('ready', 'starting')),
+    curr_day TEXT NOT NULL DEFAULT '2020-01-01',
     admin_passcode TEXT NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS member (
@@ -45,8 +46,7 @@ const statements = [
     fk_member_id INTEGER,
     fk_team_id INTEGER,
     status TEXT NOT NULL DEFAULT 'incomplete' CHECK (status IN ('i', 'c', 'u', 'r')),
-    begins_on TEXT,
-    ends_on TEXT,
+    curr_day TEXT,
     FOREIGN KEY (fk_member_id) REFERENCES member(id),
     FOREIGN KEY (fk_team_id) REFERENCES team(id)
   )`,
