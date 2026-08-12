@@ -1,9 +1,10 @@
 import db from '../../shared/db.js';
 import { transformToApi, transformToDb } from '../transform.js';
 
+// note that getAllChores gets only the active chores (today's chores) because the chore table is designed to store only the chores for the current day. The previous day's chores are closed out and marked as inactive during the day initialization process, so they are not included in the active list.
 export const getAllChores = (req, res) => {
   try {
-    const chores = db.prepare('SELECT * FROM chore').all().map(transformToApi);
+    const chores = db.prepare('SELECT * FROM chore WHERE is_active = 1').all().map(transformToApi);
     res.json(chores);
   } catch (error) {
     res.status(500).json({ error: error.message });

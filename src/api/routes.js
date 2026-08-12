@@ -4,8 +4,10 @@ import teamsRoutes from './teams/routes.js';
 import choresRoutes from './chores/routes.js';
 import choreTemplatesRoutes from './chore-templates/routes.js';
 import choreAssignmentsRoutes from './chore-assignments/routes.js';
+import { useHttpLogger } from '../shared/utils/logger.js';
 
 const router = express.Router();
+useHttpLogger(router);
 
 router.use('/members', membersRoutes);
 router.use('/teams', teamsRoutes);

@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 
-const db = new Database('database.db', { verbose: console.log });
+const db = new Database('data/database.db', { verbose: console.log });
 db.pragma('journal_mode = WAL');
 
 const statements = [
@@ -45,8 +45,9 @@ const statements = [
     name TEXT NOT NULL,
     fk_member_id INTEGER,
     fk_team_id INTEGER,
-    status TEXT NOT NULL DEFAULT 'incomplete' CHECK (status IN ('i', 'c', 'u', 'r')),
+    status TEXT NOT NULL DEFAULT 'i' CHECK (status IN ('i', 'c', 'u', 'r')),
     curr_day TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY (fk_member_id) REFERENCES member(id),
     FOREIGN KEY (fk_team_id) REFERENCES team(id)
   )`,
