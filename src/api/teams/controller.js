@@ -3,7 +3,7 @@ import { transformToApi, transformToDb } from '../transform.js';
 
 export const getAllTeams = (req, res) => {
   try {
-    const teams = db.prepare('SELECT * FROM team').all().map(transformToApi);
+    const teams = db.prepare('SELECT * FROM team WHERE is_active = 1').all().map(transformToApi);
     res.json(teams);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -13,7 +13,7 @@ export const getAllTeams = (req, res) => {
 export const getTeam = (req, res) => {
   try {
     const { id } = req.params;
-    const team = db.prepare('SELECT * FROM team WHERE id = ?').get(id);
+    const team = db.prepare('SELECT * FROM team WHERE id = ? AND is_active = 1').get(id);
     if (!team) {
       return res.status(404).json({ error: 'Team not found' });
     }
@@ -61,11 +61,11 @@ export const updateTeam = (req, res) => {
 export const deleteTeam = (req, res) => {
   try {
     const { id } = req.params;
-    const result = db.prepare('DELETE FROM team WHERE id = ?').run(id);
+    const result = db.prepare('UPDATE team SET is_active = 0 WHERE id = ?').run(id);
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Team not found' });
     }
-    res.json({ message: 'Team deleted' });
+    res.json({ message: 'Team deactivated' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

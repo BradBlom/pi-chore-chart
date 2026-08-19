@@ -3,7 +3,7 @@ import { transformToApi, transformToDb } from '../transform.js';
 
 export const getAllMembers = (req, res) => {
   try {
-    const members = db.prepare('SELECT * FROM member').all().map(transformToApi);
+    const members = db.prepare('SELECT * FROM member WHERE is_active = 1').all().map(transformToApi);
     res.json(members);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -13,7 +13,7 @@ export const getAllMembers = (req, res) => {
 export const getMember = (req, res) => {
   try {
     const { id } = req.params;
-    const member = db.prepare('SELECT * FROM member WHERE id = ?').get(id);
+    const member = db.prepare('SELECT * FROM member WHERE id = ? AND is_active = 1').get(id);
     if (!member) {
       return res.status(404).json({ error: 'Member not found' });
     }
@@ -63,11 +63,11 @@ export const updateMember = (req, res) => {
 export const deleteMember = (req, res) => {
   try {
     const { id } = req.params;
-    const result = db.prepare('DELETE FROM member WHERE id = ?').run(id);
+    const result = db.prepare('UPDATE member SET is_active = 0 WHERE id = ?').run(id);
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Member not found' });
     }
-    res.json({ message: 'Member deleted' });
+    res.json({ message: 'Member deactivated' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

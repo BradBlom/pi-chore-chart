@@ -8,6 +8,21 @@ let modalMode = 'create';
 let memberPageCache = {};
 let teamPageCache = {};
 let currentAssignmentTemplateId = null;
+let currentMembers = [];
+let currentTeams = [];
+let currentServerSetting = null;
+let editingMemberId = null;
+let editingTeamId = null;
+
+const restartScheduleDays = [
+  { value: 'mon', label: 'Mon' },
+  { value: 'tue', label: 'Tue' },
+  { value: 'wed', label: 'Wed' },
+  { value: 'thu', label: 'Thu' },
+  { value: 'fri', label: 'Fri' },
+  { value: 'sat', label: 'Sat' },
+  { value: 'sun', label: 'Sun' }
+];
 
 function initializeSettings() {
   const container = document.getElementById('settings-content');
@@ -15,8 +30,65 @@ function initializeSettings() {
     return;
   }
 
-  container.innerHTML = '<p>Loading chore templates...</p>';
-  loadChoreTemplates();
+  const modal = document.getElementById('passcode-modal');
+  const passcodeInput = document.getElementById('server-passcode');
+  if (modal) {
+    modal.style.display = 'block';
+  }
+  passcodeInput?.focus();
+}
+
+async function loadSettingsAfterVerification(passcode) {
+  const container = document.getElementById('settings-content');
+  const modal = document.getElementById('passcode-modal');
+  const message = document.getElementById('passcode-message');
+
+  if (!container || !modal || !message) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/settings/verify-passcode?passcode=${encodeURIComponent(passcode)}`, {
+      method: 'POST'
+    });
+    if (!response.ok) {
+      throw new Error('Unable to verify passcode');
+    }
+
+    const result = await response.json();
+    if (!result.isMatch) {
+      throw new Error('Incorrect passcode');
+    }
+
+    modal.style.display = 'none';
+    container.innerHTML = '<p>Loading settings...</p>';
+    Promise.all([loadSettings(), loadChoreTemplates(), loadMembers(), loadTeams()])
+      .then(() => renderSettingsPage())
+      .catch((err) => {
+        console.error('Error loading settings:', err);
+        container.innerHTML = '<p class="w3-text-red">Unable to load settings.</p>';
+      });
+  } catch (error) {
+    console.error('Error verifying settings passcode:', error);
+    message.textContent = error.message === 'Incorrect passcode'
+      ? 'Incorrect passcode.'
+      : 'Unable to verify passcode.';
+    message.style.display = 'block';
+  }
+}
+
+async function loadSettings() {
+  try {
+    const response = await fetch('/api/settings/primary');
+    if (!response.ok) {
+      throw new Error('Failed to load server settings');
+    }
+
+    currentServerSetting = await response.json();
+  } catch (error) {
+    console.error('Error loading server settings:', error);
+    currentServerSetting = null;
+  }
 }
 
 async function loadChoreTemplates() {
@@ -27,12 +99,59 @@ async function loadChoreTemplates() {
     }
 
     currentTemplates = await response.json();
-    renderSettingsPage();
+    return;
   } catch (error) {
     console.error('Error loading chore templates:', error);
     const container = document.getElementById('settings-content');
     if (container) {
       container.innerHTML = '<p class="w3-text-red">Unable to load chore templates.</p>';
+    }
+  }
+}
+
+async function loadMembers() {
+  try {
+    const response = await fetch('/api/members');
+    if (!response.ok) throw new Error('Failed to load members');
+    currentMembers = await response.json();
+    return;
+  } catch (err) {
+    console.error('Error loading members:', err);
+    currentMembers = [];
+  }
+}
+
+async function loadTeams() {
+  try {
+    const response = await fetch('/api/teams');
+    if (!response.ok) throw new Error('Failed to load teams');
+    currentTeams = await response.json();
+    return;
+  } catch (err) {
+    console.error('Error loading teams:', err);
+    currentTeams = [];
+  }
+}
+
+async function refreshSettingsContent(event) {
+  const button = event.currentTarget;
+  const container = document.getElementById('settings-content');
+
+  if (button) {
+    button.disabled = true;
+  }
+
+  try {
+    await Promise.all([loadSettings(), loadChoreTemplates(), loadMembers(), loadTeams()]);
+    renderSettingsPage();
+  } catch (error) {
+    console.error('Error refreshing settings:', error);
+    if (container) {
+      container.innerHTML = '<p class="w3-text-red">Unable to refresh settings.</p>';
+    }
+  } finally {
+    if (button) {
+      button.disabled = false;
     }
   }
 }
@@ -43,20 +162,58 @@ function renderSettingsPage() {
     return;
   }
 
-  const rows = currentTemplates.map((template) => `
+  const serverSetting = currentServerSetting || {};
+  // build rows for templates
+  const templateRows = currentTemplates.map((template) => `
     <tr>
       <td>${escapeHtml(template.name || 'Untitled')}</td>
-      <td>${escapeHtml(template.restartsOn || template.restarts_on || '—')}</td>
+      <td>${escapeHtml(formatRestartSchedule(template.restartsOn || template.restarts_on))}</td>
       <td>
-        <button class="w3-button w3-small w3-black" data-action="assign" data-id="${template.id}">
+        <button class="w3-button w3-small w3-black" data-resource="template" data-action="assign" data-id="${template.id}">
           <i class="fa fa-exchange w3-margin-right w3-text-blue" aria-hidden="true"></i>
           <span class="w3-hide-medium w3-hide-small">Assign</span>
         </button>
-        <button class="w3-button w3-small w3-black" data-action="edit" data-id="${template.id}">
+        <button class="w3-button w3-small w3-black" data-resource="template" data-action="edit" data-id="${template.id}">
           <i class="fa fa-edit w3-margin-right w3-text-blue" aria-hidden="true"></i>
           <span class="w3-hide-medium w3-hide-small">Edit</span>
         </button>
-        <button class="w3-button w3-small w3-black" data-action="delete" data-id="${template.id}">
+        <button class="w3-button w3-small w3-black" data-resource="template" data-action="delete" data-id="${template.id}">
+          <i class="fa fa-close w3-margin-right w3-text-red" aria-hidden="true"></i>
+          <span class="w3-hide-medium w3-hide-small">Delete</span>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  // build rows for members
+  const memberRows = currentMembers.map((m) => `
+    <tr>
+      <td>${escapeHtml(m.shortName || m.longName || 'Unnamed')}</td>
+      <td>${escapeHtml(m.longName || '')}</td>
+      <td>
+        <button class="w3-button w3-small w3-black" data-resource="member" data-action="edit" data-id="${m.id}">
+          <i class="fa fa-edit w3-margin-right w3-text-blue" aria-hidden="true"></i>
+          <span class="w3-hide-medium w3-hide-small">Edit</span>
+        </button>
+        <button class="w3-button w3-small w3-black" data-resource="member" data-action="delete" data-id="${m.id}">
+          <i class="fa fa-close w3-margin-right w3-text-red" aria-hidden="true"></i>
+          <span class="w3-hide-medium w3-hide-small">Delete</span>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  // build rows for teams
+  const teamRows = currentTeams.map((t) => `
+    <tr>
+      <td>${escapeHtml(t.shortName || t.longName || 'Unnamed')}</td>
+      <td>${escapeHtml(t.longName || '')}</td>
+      <td>
+        <button class="w3-button w3-small w3-black" data-resource="team" data-action="edit" data-id="${t.id}">
+          <i class="fa fa-edit w3-margin-right w3-text-blue" aria-hidden="true"></i>
+          <span class="w3-hide-medium w3-hide-small">Edit</span>
+        </button>
+        <button class="w3-button w3-small w3-black" data-resource="team" data-action="delete" data-id="${t.id}">
           <i class="fa fa-close w3-margin-right w3-text-red" aria-hidden="true"></i>
           <span class="w3-hide-medium w3-hide-small">Delete</span>
         </button>
@@ -66,7 +223,14 @@ function renderSettingsPage() {
 
   container.innerHTML = `
     <div class="w3-row-padding">
+      <div id="settings-message" class="w3-panel w3-pale-green w3-border w3-margin-bottom" style="display:none"></div>
       <div class="w3-col s12">
+        <div class="w3-margin-bottom w3-margin-top">
+          <button id="refresh-settings-btn" class="w3-button w3-small w3-black" type="button">
+            <i class="fa fa-refresh w3-margin-right w3-text-blue" aria-hidden="true"></i>
+            <span class="w3-hide-medium w3-hide-small">Refresh</span>
+          </button>
+        </div>
         <div class="w3-margin-bottom">
           <h2 style="margin:0 0 8px 0;">Chore Templates</h2>
           <button id="create-template-btn" class="w3-button w3-small w3-black">
@@ -74,7 +238,6 @@ function renderSettingsPage() {
             <span class="w3-hide-medium w3-hide-small">Create</span>
           </button>
         </div>
-        <div id="settings-message" class="w3-panel w3-pale-green w3-border w3-margin-bottom" style="display:none"></div>
         <table class="w3-table w3-striped w3-bordered w3-white">
           <thead>
             <tr>
@@ -84,37 +247,158 @@ function renderSettingsPage() {
             </tr>
           </thead>
           <tbody>
-            ${rows || '<tr><td colspan="3">No chore templates found.</td></tr>'}
+            ${templateRows || '<tr><td colspan="3">No chore templates found.</td></tr>'}
           </tbody>
         </table>
       </div>
     </div>
+
+    <div class="w3-row-padding" style="margin-top:24px">
+      <div class="w3-col s12">
+        <div class="w3-margin-bottom">
+          <h2 style="margin:0 0 8px 0;">Members</h2>
+          <button id="create-member-btn" class="w3-button w3-small w3-black">
+            <i class="fa fa-plus w3-margin-right w3-text-green" aria-hidden="true"></i>
+            <span class="w3-hide-medium w3-hide-small">Create</span>
+          </button>
+        </div>
+        <table class="w3-table w3-striped w3-bordered w3-white">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Full name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${memberRows || '<tr><td colspan="3">No members found.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="w3-row-padding" style="margin-top:24px">
+      <div class="w3-col s12">
+        <div class="w3-margin-bottom">
+          <h2 style="margin:0 0 8px 0;">Teams</h2>
+          <button id="create-team-btn" class="w3-button w3-small w3-black">
+            <i class="fa fa-plus w3-margin-right w3-text-green" aria-hidden="true"></i>
+            <span class="w3-hide-medium w3-hide-small">Create</span>
+          </button>
+        </div>
+        <table class="w3-table w3-striped w3-bordered w3-white">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Full name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${teamRows || '<tr><td colspan="3">No teams found.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="w3-row-padding" style="margin-top:24px">
+      <div class="w3-col s12">
+        <div class="w3-margin-bottom">
+          <h2 style="margin:0 0 8px 0;">Server Settings</h2>
+        </div>
+        <form id="server-settings-form" class="w3-container w3-white w3-border w3-padding">
+          <input type="hidden" id="server-setting-id" value="${escapeHtml(serverSetting.id || '')}" />
+          <label class="w3-text-dark-grey" for="server-day-begins-hour">Day begins hour</label>
+          <input id="server-day-begins-hour" type="number" min="0" max="23" class="w3-input w3-border w3-margin-bottom" value="${escapeHtml(serverSetting.dayBeginsHr ?? '')}" required />
+
+          <label class="w3-text-dark-grey" for="server-admin-passcode">Admin passcode</label>
+          <input id="server-admin-passcode" type="password" class="w3-input w3-border w3-margin-bottom" value="${escapeHtml(serverSetting.adminPasscode || '')}" required />
+
+          <p><strong>Initialization status:</strong> ${escapeHtml(serverSetting.initDayStatus || '—')}</p>
+          <p><strong>Current day:</strong> ${escapeHtml(serverSetting.currDay || '—')}</p>
+          <button type="submit" class="w3-button w3-black">
+            <i class="fa fa-save w3-margin-right w3-text-green" aria-hidden="true"></i>
+            Save server settings
+          </button>
+        </form>
+      </div>
+    </div>
   `;
 
-  const createButton = document.getElementById('create-template-btn');
-  if (createButton) {
-    createButton.addEventListener('click', () => openTemplateModal());
-  }
+  document.getElementById('server-settings-form')?.addEventListener('submit', saveServerSettings);
+  document.getElementById('refresh-settings-btn')?.addEventListener('click', refreshSettingsContent);
+
+  const createTemplateButton = document.getElementById('create-template-btn');
+  if (createTemplateButton) createTemplateButton.addEventListener('click', () => openTemplateModal());
+  const createMemberButton = document.getElementById('create-member-btn');
+  if (createMemberButton) createMemberButton.addEventListener('click', () => openMemberModal());
+  const createTeamButton = document.getElementById('create-team-btn');
+  if (createTeamButton) createTeamButton.addEventListener('click', () => openTeamModal());
 
   container.querySelectorAll('[data-action]').forEach((button) => {
     button.addEventListener('click', () => {
       const action = button.getAttribute('data-action');
+      const resource = button.getAttribute('data-resource') || 'template';
       const id = Number(button.getAttribute('data-id'));
-      const template = currentTemplates.find((item) => item.id === id);
 
-      if (!template) {
-        return;
-      }
-
-      if (action === 'edit') {
-        openTemplateModal(template);
-      } else if (action === 'delete') {
-        deleteTemplate(template.id);
-      } else if (action === 'assign') {
-        openAssignModal(template);
+      if (resource === 'template') {
+        const template = currentTemplates.find((item) => item.id === id);
+        if (!template) return;
+        if (action === 'edit') openTemplateModal(template);
+        else if (action === 'delete') deleteTemplate(template.id);
+        else if (action === 'assign') openAssignModal(template);
+      } else if (resource === 'member') {
+        const member = currentMembers.find((m) => m.id === id);
+        if (!member) return;
+        if (action === 'edit') openMemberModal(member);
+        else if (action === 'delete') deleteMember(member.id);
+      } else if (resource === 'team') {
+        const team = currentTeams.find((t) => t.id === id);
+        if (!team) return;
+        if (action === 'edit') openTeamModal(team);
+        else if (action === 'delete') deleteTeam(team.id);
       }
     });
   });
+}
+
+async function saveServerSettings(event) {
+  event.preventDefault();
+
+  const id = document.getElementById('server-setting-id')?.value;
+  const dayBeginsHr = Number(document.getElementById('server-day-begins-hour')?.value);
+  const adminPasscode = document.getElementById('server-admin-passcode')?.value.trim();
+  const message = document.getElementById('settings-message');
+
+  if (!id || Number.isNaN(dayBeginsHr) || !adminPasscode || !currentServerSetting) {
+    showMessage('Please enter valid server settings.', true);
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/settings/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dayBeginsHr,
+        initDayStatus: currentServerSetting.initDayStatus,
+        currDay: currentServerSetting.currDay,
+        adminPasscode
+      })
+    });
+    if (!response.ok) {
+      throw new Error('Unable to save server settings');
+    }
+
+    currentServerSetting = await response.json();
+    renderSettingsPage();
+    showMessage('Server settings saved.');
+  } catch (error) {
+    console.error('Error saving server settings:', error);
+    if (message) {
+      showMessage('Unable to save server settings.', true);
+    }
+  }
 }
 
 function openTemplateModal(template = null) {
@@ -125,11 +409,10 @@ function openTemplateModal(template = null) {
   const modalTitle = document.getElementById('modal-title');
   const form = document.getElementById('template-form');
   const nameInput = document.getElementById('template-name');
-  const restartsInput = document.getElementById('template-restarts-on');
   const templateIdInput = document.getElementById('template-id');
   const message = document.getElementById('modal-message');
 
-  if (!modal || !modalTitle || !form || !nameInput || !restartsInput || !templateIdInput || !message) {
+  if (!modal || !modalTitle || !form || !nameInput || !templateIdInput || !message) {
     return;
   }
 
@@ -139,11 +422,12 @@ function openTemplateModal(template = null) {
   if (template) {
     modalTitle.textContent = 'Edit Chore Template';
     nameInput.value = template.name || '';
-    restartsInput.value = template.restartsOn || template.restarts_on || '';
+    setRestartScheduleCheckboxes(template.restartsOn || template.restarts_on);
     templateIdInput.value = template.id;
   } else {
     modalTitle.textContent = 'Create Chore Template';
     form.reset();
+    setRestartScheduleCheckboxes('');
     templateIdInput.value = '';
   }
 
@@ -254,11 +538,12 @@ function renderAssignmentList(assignments, container, templateId) {
     </div>
     <div class="w3-container w3-padding-small" style="margin-top:32px">
       <div class="w3-margin-bottom">
-        <button class="w3-button w3-small w3-black">
+        <button class="w3-button w3-small w3-black" data-action="create-team-assignment">
           <i class="fa fa-plus w3-margin-right w3-text-green" aria-hidden="true"></i>
           <i class="fa fa-users w3-margin-right w3-text-green" aria-hidden="true"></i>
           <span class="w3-hide-medium w3-hide-small">Create team assignment</span>
         </button>
+        <div class="w3-margin-top" data-team-assignment-picker></div>
       </div>
       <table class="w3-table w3-striped w3-bordered w3-white">
         <thead>
@@ -280,6 +565,16 @@ function renderAssignmentList(assignments, container, templateId) {
         return;
       }
       showMemberAssignmentOptions(container, currentAssignmentTemplateId);
+    });
+  }
+
+  const teamAssignmentButton = container.querySelector('[data-action="create-team-assignment"]');
+  if (teamAssignmentButton) {
+    teamAssignmentButton.addEventListener('click', () => {
+      if (!currentAssignmentTemplateId) {
+        return;
+      }
+      showTeamAssignmentOptions(container, currentAssignmentTemplateId);
     });
   }
 
@@ -334,7 +629,7 @@ async function showMemberAssignmentOptions(container, templateId) {
             data-action="select-member-assignment"
             data-member-id="${member.id}"
           >
-            ${escapeHtml(member.longName || member.long_name || member.name || 'Unnamed member')}
+            ${escapeHtml(member.longName || member.shortName || 'Unnamed member')}
           </button>
         `).join('')}
       </div>
@@ -352,6 +647,59 @@ async function showMemberAssignmentOptions(container, templateId) {
   } catch (error) {
     console.error('Error loading members:', error);
     picker.innerHTML = '<div class="w3-padding-small w3-border w3-round w3-text-red">Unable to load members.</div>';
+  }
+}
+
+async function showTeamAssignmentOptions(container, templateId) {
+  if (!container) {
+    return;
+  }
+
+  const picker = container.querySelector('[data-team-assignment-picker]');
+  if (!picker) {
+    return;
+  }
+
+  picker.innerHTML = '<div class="w3-padding-small w3-border w3-round" style="display:inline-block">Loading teams...</div>';
+
+  try {
+    const response = await fetch('/api/teams');
+    if (!response.ok) {
+      throw new Error('Unable to load teams');
+    }
+
+    const teams = await response.json();
+    if (!Array.isArray(teams) || !teams.length) {
+      picker.innerHTML = '<div class="w3-padding-small w3-border w3-round">No teams found.</div>';
+      return;
+    }
+
+    picker.innerHTML = `
+      <div class="w3-container w3-padding-small w3-border w3-round" style="display:flex; flex-wrap:wrap; gap:8px;">
+        ${teams.map((team) => `
+          <button
+            class="w3-button w3-small w3-white w3-border"
+            data-action="select-team-assignment"
+            data-team-id="${team.id}"
+          >
+            ${escapeHtml(team.longName || team.shortName || 'Unnamed team')}
+          </button>
+        `).join('')}
+      </div>
+    `;
+
+    picker.querySelectorAll('[data-action="select-team-assignment"]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const teamId = button.getAttribute('data-team-id');
+        if (!teamId) {
+          return;
+        }
+        await createTeamAssignment(templateId, Number(teamId), container);
+      });
+    });
+  } catch (error) {
+    console.error('Error loading teams:', error);
+    picker.innerHTML = '<div class="w3-padding-small w3-border w3-round w3-text-red">Unable to load teams.</div>';
   }
 }
 
@@ -386,13 +734,44 @@ async function createMemberAssignment(templateId, memberId, container) {
   }
 }
 
+async function createTeamAssignment(templateId, teamId, container) {
+  if (!templateId || !teamId) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/chore-assignments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fkChoreTemplateId: templateId, fkTeamId: teamId })
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to create assignment');
+    }
+
+    const assignmentList = document.getElementById('assignment-list');
+    if (assignmentList) {
+      loadTemplateAssignments(templateId, assignmentList);
+    }
+  } catch (error) {
+    console.error('Error creating team assignment:', error);
+    if (container) {
+      const picker = container.querySelector('[data-team-assignment-picker]');
+      if (picker) {
+        picker.innerHTML = '<div class="w3-padding-small w3-border w3-round w3-text-red">Unable to add assignment.</div>';
+      }
+    }
+  }
+}
+
 async function loadMemberName(memberId, cell) {
   const cacheKey = String(memberId);
   const cachedMember = memberPageCache[cacheKey];
 
   if (cachedMember) {
     if (cell) {
-      cell.textContent = cachedMember.longName || cachedMember.long_name || cachedMember.name || 'Unnamed member';
+      cell.textContent = cachedMember.longName || cachedMember.shortName || 'Unnamed member';
     }
     return;
   }
@@ -405,7 +784,7 @@ async function loadMemberName(memberId, cell) {
 
     const member = await response.json();
     memberPageCache[cacheKey] = member;
-    const displayName = member.longName || member.long_name || member.name || 'Unnamed member';
+    const displayName = member.longName || member.shortName || 'Unnamed member';
     if (cell) {
       cell.textContent = displayName;
     }
@@ -423,7 +802,7 @@ async function loadTeamName(teamId, cell) {
 
   if (cachedTeam) {
     if (cell) {
-      cell.textContent = cachedTeam.longName || cachedTeam.long_name || cachedTeam.name || 'Unnamed team';
+      cell.textContent = cachedTeam.longName || cachedTeam.shortName || 'Unnamed team';
     }
     return;
   }
@@ -436,7 +815,7 @@ async function loadTeamName(teamId, cell) {
 
     const team = await response.json();
     teamPageCache[cacheKey] = team;
-    const displayName = team.longName || team.long_name || team.name || 'Unnamed team';
+    const displayName = team.longName || team.shortName || 'Unnamed team';
     if (cell) {
       cell.textContent = displayName;
     }
@@ -494,6 +873,74 @@ function closeTemplateModal() {
   modalMode = 'create';
 }
 
+function openMemberModal(member = null) {
+  editingMemberId = member ? member.id : null;
+  const modal = document.getElementById('member-modal');
+  const title = document.getElementById('member-modal-title');
+  const form = document.getElementById('member-form');
+  const shortNameInput = document.getElementById('member-short-name');
+  const longNameInput = document.getElementById('member-long-name');
+  const isAdminInput = document.getElementById('member-is-admin');
+  const idInput = document.getElementById('member-id');
+  const msg = document.getElementById('member-modal-message');
+  if (!modal || !form || !shortNameInput || !idInput || !msg) return;
+  msg.style.display = 'none'; msg.textContent = '';
+  if (member) {
+    title.textContent = 'Edit Member';
+    shortNameInput.value = member.shortName || '';
+    longNameInput.value = member.longName || '';
+    if (isAdminInput) isAdminInput.checked = Boolean(member.isAdmin || false);
+    idInput.value = member.id;
+  } else {
+    title.textContent = 'Create Member';
+    form.reset(); idInput.value = '';
+  }
+  modal.style.display = 'block';
+}
+
+function closeMemberModal() {
+  const modal = document.getElementById('member-modal');
+  const form = document.getElementById('member-form');
+  const msg = document.getElementById('member-modal-message');
+  if (modal) modal.style.display = 'none';
+  if (form) form.reset();
+  if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
+  editingMemberId = null;
+}
+
+function openTeamModal(team = null) {
+  editingTeamId = team ? team.id : null;
+  const modal = document.getElementById('team-modal');
+  const title = document.getElementById('team-modal-title');
+  const form = document.getElementById('team-form');
+  const shortNameInput = document.getElementById('team-short-name');
+  const longNameInput = document.getElementById('team-long-name');
+  const idInput = document.getElementById('team-id');
+  const msg = document.getElementById('team-modal-message');
+  if (!modal || !form || !shortNameInput || !idInput || !msg) return;
+  msg.style.display = 'none'; msg.textContent = '';
+  if (team) {
+    title.textContent = 'Edit Team';
+    shortNameInput.value = team.shortName || '';
+    longNameInput.value = team.longName || '';
+    idInput.value = team.id;
+  } else {
+    title.textContent = 'Create Team';
+    form.reset(); idInput.value = '';
+  }
+  modal.style.display = 'block';
+}
+
+function closeTeamModal() {
+  const modal = document.getElementById('team-modal');
+  const form = document.getElementById('team-form');
+  const msg = document.getElementById('team-modal-message');
+  if (modal) modal.style.display = 'none';
+  if (form) form.reset();
+  if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
+  editingTeamId = null;
+}
+
 function closeAssignmentModal() {
   const modal = document.getElementById('assignment-modal');
   const info = document.getElementById('assignment-template-info');
@@ -524,19 +971,18 @@ document.getElementById('template-form')?.addEventListener('submit', async (even
   }
 
   const nameInput = document.getElementById('template-name');
-  const restartsInput = document.getElementById('template-restarts-on');
   const templateIdInput = document.getElementById('template-id');
   const message = document.getElementById('modal-message');
 
-  if (!nameInput || !restartsInput || !message) {
+  if (!nameInput || !message) {
     return;
   }
 
   const name = nameInput.value.trim();
-  const restartsOn = restartsInput.value.trim();
+  const restartsOn = getSelectedRestartSchedule();
 
   if (!name || !restartsOn) {
-    message.textContent = 'Please fill out both fields.';
+    message.textContent = 'Please enter a name and select at least one restart day.';
     message.className = 'w3-panel w3-pale-red w3-border w3-margin-bottom';
     message.style.display = 'block';
     return;
@@ -576,6 +1022,133 @@ document.getElementById('template-form')?.addEventListener('submit', async (even
     message.style.display = 'block';
   }
 });
+
+document.getElementById('passcode-form')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const passcodeInput = document.getElementById('server-passcode');
+  const message = document.getElementById('passcode-message');
+  if (!passcodeInput || !message) {
+    return;
+  }
+
+  message.style.display = 'none';
+  await loadSettingsAfterVerification(passcodeInput.value);
+});
+
+document.getElementById('member-form')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const shortNameInput = document.getElementById('member-short-name');
+  const longNameInput = document.getElementById('member-long-name');
+  const idInput = document.getElementById('member-id');
+  const msg = document.getElementById('member-modal-message');
+  if (!shortNameInput || !msg) return;
+
+  const shortName = shortNameInput.value.trim();
+  const longName = longNameInput?.value.trim() || '';
+  const isAdmin = Boolean(document.getElementById('member-is-admin')?.checked);
+
+  if (!shortName) {
+    msg.textContent = 'Please enter a name.';
+    msg.className = 'w3-panel w3-pale-red w3-border w3-margin-bottom';
+    msg.style.display = 'block';
+    return;
+  }
+
+  const payload = { shortName, longName, isActive: 1 };
+  payload.isAdmin = isAdmin ? 1 : 0;
+  const editingId = idInput?.value ? Number(idInput.value) : null;
+  const method = editingId ? 'PUT' : 'POST';
+  const url = editingId ? `/api/members/${editingId}` : '/api/members';
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error('Unable to save member');
+    await loadMembers();
+    renderSettingsPage();
+    closeMemberModal();
+    showMessage('Member saved.');
+  } catch (err) {
+    console.error('Error saving member:', err);
+    msg.textContent = 'Unable to save member.';
+    msg.className = 'w3-panel w3-pale-red w3-border w3-margin-bottom';
+    msg.style.display = 'block';
+  }
+});
+
+document.getElementById('team-form')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const shortNameInput = document.getElementById('team-short-name');
+  const longNameInput = document.getElementById('team-long-name');
+  const idInput = document.getElementById('team-id');
+  const msg = document.getElementById('team-modal-message');
+  if (!shortNameInput || !msg) return;
+
+  const shortName = shortNameInput.value.trim();
+  const longName = longNameInput?.value.trim() || '';
+
+  if (!shortName) {
+    msg.textContent = 'Please enter a name.';
+    msg.className = 'w3-panel w3-pale-red w3-border w3-margin-bottom';
+    msg.style.display = 'block';
+    return;
+  }
+
+  const payload = { shortName, longName, isActive: 1 };
+  const editingId = idInput?.value ? Number(idInput.value) : null;
+  const method = editingId ? 'PUT' : 'POST';
+  const url = editingId ? `/api/teams/${editingId}` : '/api/teams';
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error('Unable to save team');
+    await loadTeams();
+    renderSettingsPage();
+    closeTeamModal();
+    showMessage('Team saved.');
+  } catch (err) {
+    console.error('Error saving team:', err);
+    msg.textContent = 'Unable to save team.';
+    msg.className = 'w3-panel w3-pale-red w3-border w3-margin-bottom';
+    msg.style.display = 'block';
+  }
+});
+
+async function deleteMember(id) {
+  if (!window.confirm('Delete this member?')) return;
+  try {
+    const response = await fetch(`/api/members/${id}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Unable to delete member');
+    await loadMembers();
+    renderSettingsPage();
+    showMessage('Member deleted.');
+  } catch (err) {
+    console.error('Error deleting member:', err);
+    showMessage('Unable to delete member.', true);
+  }
+}
+
+async function deleteTeam(id) {
+  if (!window.confirm('Delete this team?')) return;
+  try {
+    const response = await fetch(`/api/teams/${id}`, { method: 'DELETE' });
+    if (!response.ok) throw new Error('Unable to delete team');
+    await loadTeams();
+    renderSettingsPage();
+    showMessage('Team deleted.');
+  } catch (err) {
+    console.error('Error deleting team:', err);
+    showMessage('Unable to delete team.', true);
+  }
+}
 
 async function deleteTemplate(id) {
   if (!window.confirm('Delete this chore template?')) {
@@ -619,5 +1192,56 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
+function formatRestartSchedule(value) {
+  const schedule = String(value || '').trim().toLowerCase();
+  if (!schedule) {
+    return '—';
+  }
+  if (schedule === 'daily') {
+    return 'Daily';
+  }
+
+  return schedule
+    .split(',')
+    .map((day) => day.trim())
+    .filter(Boolean)
+    .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
+    .join(' ');
+}
+
+function setRestartScheduleCheckboxes(value) {
+  const schedule = String(value || '').trim().toLowerCase();
+  const selectedDays = schedule === 'daily'
+    ? restartScheduleDays.map((day) => day.value)
+    : schedule.split(',').map((day) => day.trim()).filter(Boolean);
+
+  document.querySelectorAll('[data-restart-day]').forEach((checkbox) => {
+    checkbox.checked = selectedDays.includes(checkbox.value);
+  });
+}
+
+function getSelectedRestartSchedule() {
+  const form = document.getElementById('template-form');
+  if (!form) {
+    return '';
+  }
+
+  const selectedDays = Array.from(
+    form.querySelectorAll('[data-restart-day]:checked')
+  ).map((checkbox) => checkbox.value);
+
+  const orderedSelectedDays = restartScheduleDays
+    .map((day) => day.value)
+    .filter((day) => selectedDays.includes(day));
+
+  if (orderedSelectedDays.length === restartScheduleDays.length) {
+    return 'daily';
+  }
+
+  return orderedSelectedDays.join(',');
+}
+
 window.closeTemplateModal = closeTemplateModal;
 window.closeAssignmentModal = closeAssignmentModal;
+window.closeMemberModal = closeMemberModal;
+window.closeTeamModal = closeTeamModal;

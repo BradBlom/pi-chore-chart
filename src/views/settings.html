@@ -55,8 +55,16 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
         <label class="w3-text-dark-grey">Name</label>
         <input id="template-name" class="w3-input w3-border w3-margin-bottom" required />
 
-        <label class="w3-text-dark-grey">Restart schedule</label>
-        <input id="template-restarts-on" class="w3-input w3-border" required />
+        <fieldset class="w3-border w3-padding-small">
+          <legend class="w3-text-dark-grey">Restart schedule</legend>
+          <label class="w3-margin-right"><input type="checkbox" class="w3-check" data-restart-day value="mon"> Mon</label>
+          <label class="w3-margin-right"><input type="checkbox" class="w3-check" data-restart-day value="tue"> Tue</label>
+          <label class="w3-margin-right"><input type="checkbox" class="w3-check" data-restart-day value="wed"> Wed</label>
+          <label class="w3-margin-right"><input type="checkbox" class="w3-check" data-restart-day value="thu"> Thu</label>
+          <label class="w3-margin-right"><input type="checkbox" class="w3-check" data-restart-day value="fri"> Fri</label>
+          <label class="w3-margin-right"><input type="checkbox" class="w3-check" data-restart-day value="sat"> Sat</label>
+          <label><input type="checkbox" class="w3-check" data-restart-day value="sun"> Sun</label>
+        </fieldset>
       </form>
     </div>
 
@@ -66,6 +74,83 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
     </footer>
   </div>
 </div>
+
+<div id="passcode-modal" class="w3-modal" style="display:none">
+  <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width:360px">
+    <header class="w3-container w3-theme">
+      <h2>Settings access</h2>
+    </header>
+
+    <div class="w3-container w3-padding">
+      <div id="passcode-message" class="w3-panel w3-pale-red w3-border w3-margin-bottom" style="display:none"></div>
+      <form id="passcode-form" class="w3-container">
+        <label class="w3-text-dark-grey" for="server-passcode">Server passcode</label>
+        <input id="server-passcode" type="password" class="w3-input w3-border w3-margin-bottom" required autofocus />
+        <button type="submit" class="w3-button w3-theme">Continue</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+  <!-- Member modal -->
+  <div id="member-modal" class="w3-modal" style="display:none">
+    <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+      <header class="w3-container w3-theme">
+        <span class="w3-button w3-display-topright" onclick="closeMemberModal()">&times;</span>
+        <h2 id="member-modal-title">Create Member</h2>
+      </header>
+
+      <div class="w3-container w3-padding">
+        <div id="member-modal-message" class="w3-panel w3-pale-yellow w3-border w3-margin-bottom" style="display:none"></div>
+        <form id="member-form" class="w3-container">
+          <input type="hidden" id="member-id" />
+
+          <label class="w3-text-dark-grey">Name</label>
+          <input id="member-short-name" class="w3-input w3-border w3-margin-bottom" required />
+
+          <label class="w3-text-dark-grey">Full name</label>
+          <input id="member-long-name" class="w3-input w3-border w3-margin-bottom" />
+          
+          <label class="w3-text-dark-grey">Administrator</label>
+          <br/>
+          <label class="w3-margin-bottom"><input type="checkbox" id="member-is-admin" class="w3-check w3-margin-bottom"> Is admin</label>
+        </form>
+      </div>
+
+      <footer class="w3-container w3-padding w3-border-top">
+        <button type="submit" form="member-form" class="w3-button w3-theme">Save</button>
+        <button type="button" class="w3-button w3-white w3-border" onclick="closeMemberModal()">Cancel</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Team modal -->
+  <div id="team-modal" class="w3-modal" style="display:none">
+    <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+      <header class="w3-container w3-theme">
+        <span class="w3-button w3-display-topright" onclick="closeTeamModal()">&times;</span>
+        <h2 id="team-modal-title">Create Team</h2>
+      </header>
+
+      <div class="w3-container w3-padding">
+        <div id="team-modal-message" class="w3-panel w3-pale-yellow w3-border w3-margin-bottom" style="display:none"></div>
+        <form id="team-form" class="w3-container">
+          <input type="hidden" id="team-id" />
+
+          <label class="w3-text-dark-grey">Name</label>
+          <input id="team-short-name" class="w3-input w3-border w3-margin-bottom" required />
+
+          <label class="w3-text-dark-grey">Full name</label>
+          <input id="team-long-name" class="w3-input w3-border w3-margin-bottom" />
+        </form>
+      </div>
+
+      <footer class="w3-container w3-padding w3-border-top">
+        <button type="submit" form="team-form" class="w3-button w3-theme">Save</button>
+        <button type="button" class="w3-button w3-white w3-border" onclick="closeTeamModal()">Cancel</button>
+      </footer>
+    </div>
+  </div>
 
 <div id="assignment-modal" class="w3-modal" style="display:none">
   <div class="w3-modal-content w3-card-4 w3-animate-zoom">
