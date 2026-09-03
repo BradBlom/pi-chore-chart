@@ -3,13 +3,6 @@ import Database from 'better-sqlite3';
 const db = new Database('data/database.db', { verbose: console.log });
 db.pragma('journal_mode = WAL');
 
-const recs_server_settings = {
-    singleEntry: {
-        day_begins_hr: 5,
-        admin_passcode: 'admin123'
-    }
-};
-
 const recs_members = {
     alice: {
         long_name: 'Alice Johnson',
@@ -90,15 +83,6 @@ const recs_chore = {
         curr_day: '2026-07-16'
     }
 };
-
-// Insert sample server_settings
-const serverSettingsStmt = db.prepare(`
-  INSERT INTO server_settings (day_begins_hr, admin_passcode)
-  VALUES (?, ?)
-`);
-const serverSettingsResult = serverSettingsStmt.run(recs_server_settings.singleEntry.day_begins_hr, recs_server_settings.singleEntry.admin_passcode);
-recs_server_settings.singleEntry.id = serverSettingsResult.lastInsertRowid;
-console.log('Inserted server_settings with id:', recs_server_settings.singleEntry.id);
 
 // Insert sample members
 const memberStmt = db.prepare(`

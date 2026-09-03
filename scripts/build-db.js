@@ -60,6 +60,12 @@ for (const statement of statements) {
   db.exec(statement);
 }
 
+db.exec(`
+  INSERT INTO server_settings (day_begins_hr, admin_passcode)
+  SELECT 5, 'admin123'
+  WHERE NOT EXISTS (SELECT 1 FROM server_settings)
+`);
+
 console.log('Database schema created successfully.');
 db.close();
 

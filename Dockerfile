@@ -9,6 +9,9 @@ RUN node --version && npm --version && python3 --version
 # Set working directory
 WORKDIR /app
 
+# Ensure runtime directories exist before startup initializes the database or logs
+RUN mkdir -p /app/data /app/logs
+
 # Copy package files first (better caching)
 COPY package*.json ./
 
