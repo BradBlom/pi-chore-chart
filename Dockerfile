@@ -1,4 +1,10 @@
-FROM node:20-alpine AS base
+FROM node:22 AS base
+
+RUN apt-get update && apt-get install -y python3 python3-pip && \
+    rm -rf /var/lib/apt/lists/*
+
+# Verify installations
+RUN node --version && npm --version && python3 --version
 
 # Set working directory
 WORKDIR /app
