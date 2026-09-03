@@ -1,8 +1,5 @@
 node_modules
 
-database.db
-database.db-*
-
 scripts/seed-db.js
 
 logs
