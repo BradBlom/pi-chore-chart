@@ -49,6 +49,9 @@ export function initDayIfNeeded() {
   const effectiveDateStr = currentHour < settings.day_begins_hr
     ? previousDateStr
     : currentDateStr;
+  const effectiveDayOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][
+    new Date(`${effectiveDateStr}T00:00:00Z`).getUTCDay()
+  ];
   
   // Check if we need to initialize a new day
   // Only skip initialization when it's still the same stored day and the current hour is before the configured start hour
@@ -72,7 +75,8 @@ export function initDayIfNeeded() {
       SELECT 
         cta.fk_member_id,
         cta.fk_team_id,
-        ct.name
+        ct.name,
+        ct.restarts_on
       FROM chore_template_assignment cta
       JOIN chore_template ct ON cta.fk_chore_template_id = ct.id
     `).all();
@@ -84,6 +88,14 @@ export function initDayIfNeeded() {
     `);
     
     for (const assignment of choreAssignments) {
+      const restartDays = assignment.restarts_on
+        .split(',')
+        .map((day) => day.trim().toLowerCase());
+
+      if (!restartDays.includes('daily') && !restartDays.includes(effectiveDayOfWeek)) {
+        continue;
+      }
+
       choreInsertStmt.run(
         assignment.name,
         assignment.fk_member_id,
