@@ -39,20 +39,29 @@ export function initDayIfNeeded() {
   // Get current UTC date and time
   const nowDt = new Date();
   const currentDateStr = nowDt.toISOString().split('T')[0]; // YYYY-MM-DD in UTC
+  const tomorrowDt = new Date(nowDt);
+  tomorrowDt.setUTCDate(tomorrowDt.getUTCDate() + 1);
+  const tomorrowDateStr = tomorrowDt.toISOString().split('T')[0];
+  const previousDt = new Date(nowDt);
+  previousDt.setUTCDate(previousDt.getUTCDate() - 1);
+  const previousDateStr = previousDt.toISOString().split('T')[0];
   const currentHour = nowDt.getUTCHours();
+  const effectiveDateStr = currentHour < settings.day_begins_hr
+    ? previousDateStr
+    : currentDateStr;
   
   // Check if we need to initialize a new day
   // Only skip initialization when it's still the same stored day and the current hour is before the configured start hour
-  if (currentDateStr === settings.curr_day && currentHour < settings.day_begins_hr) {
+  if (settings.curr_day === effectiveDateStr || settings.curr_day === tomorrowDateStr) {
     // No need to initialize
     logger.info(`No day initialization needed. Current date: ${currentDateStr}, Stored curr_day: ${settings.curr_day}, Current hour: ${currentHour}, Day begins at hour: ${settings.day_begins_hr}`);
     return;
   }
   
   try {
-    // Step 1: Set curr_day to today's date and init_day_status to 'starting'
+    // Step 1: Set curr_day to the active business date and init_day_status to 'starting'
     db.prepare('UPDATE server_settings SET curr_day = ?, init_day_status = ? WHERE id = 1')
-      .run(currentDateStr, 'starting');
+      .run(effectiveDateStr, 'starting');
     
     // Step 2: Close out chores from the previous stored day
     db.prepare('UPDATE chore SET is_active = 0 WHERE curr_day = ?')
@@ -80,7 +89,7 @@ export function initDayIfNeeded() {
         assignment.fk_member_id,
         assignment.fk_team_id,
         'i', // status 'i' = incomplete
-        currentDateStr
+        effectiveDateStr
       );
     }
     

@@ -18,7 +18,7 @@
     "build-db": "node scripts/build-db.js",
     "seed-db": "node scripts/seed-db.js",
     "seed-db-example": "node scripts/seed-db-example.js",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
     "start": "node src/app.js"
   },
   "dependencies": {
