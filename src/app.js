@@ -8,6 +8,11 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static('src/public'));
 
+// Default page is the dashboard
+app.get('/', (req, res) => {
+  res.redirect('/app/dashboard');
+});
+
 // App routes (HTML pages)
 app.use('/app', appRoutes);
 

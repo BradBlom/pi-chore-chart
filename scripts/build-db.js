@@ -13,14 +13,12 @@ const statements = [
   )`,
   `CREATE TABLE IF NOT EXISTS member (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    long_name TEXT NOT NULL,
     short_name TEXT NOT NULL,
     is_active INTEGER NOT NULL DEFAULT 1,
     is_admin INTEGER NOT NULL DEFAULT 0
   )`,
   `CREATE TABLE IF NOT EXISTS team (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    long_name TEXT NOT NULL,
     short_name TEXT NOT NULL,
     is_active INTEGER NOT NULL DEFAULT 1
   )`,
@@ -58,6 +56,13 @@ const statements = [
 
 for (const statement of statements) {
   db.exec(statement);
+}
+
+for (const table of ['member', 'team']) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (columns.some((column) => column.name === 'long_name')) {
+    db.exec(`ALTER TABLE ${table} DROP COLUMN long_name`);
+  }
 }
 
 db.exec(`

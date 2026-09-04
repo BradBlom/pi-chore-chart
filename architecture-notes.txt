@@ -17,14 +17,12 @@ Table Details:
 
   - member
     - id
-    - long_name
     - short_name
     - is_active
     - is_admin
   
   - team
     - id
-    - long_name
     - short_name
     - is_active
   

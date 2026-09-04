@@ -26,9 +26,8 @@ export const getMember = (req, res) => {
 export const createMember = (req, res) => {
   try {
     const payload = transformToDb(req.body);
-    const { long_name, short_name, is_active, is_admin } = payload;
-    const result = db.prepare('INSERT INTO member (long_name, short_name, is_active, is_admin) VALUES (?, ?, ?, ?)').run(
-      long_name,
+    const { short_name, is_active, is_admin } = payload;
+    const result = db.prepare('INSERT INTO member (short_name, is_active, is_admin) VALUES (?, ?, ?)').run(
       short_name,
       is_active === undefined ? 1 : is_active,
       is_admin === undefined ? 0 : is_admin
@@ -43,9 +42,8 @@ export const updateMember = (req, res) => {
   try {
     const { id } = req.params;
     const payload = transformToDb(req.body);
-    const { long_name, short_name, is_active, is_admin } = payload;
-    const result = db.prepare('UPDATE member SET long_name = ?, short_name = ?, is_active = ?, is_admin = ? WHERE id = ?').run(
-      long_name,
+    const { short_name, is_active, is_admin } = payload;
+    const result = db.prepare('UPDATE member SET short_name = ?, is_active = ?, is_admin = ? WHERE id = ?').run(
       short_name,
       is_active,
       is_admin,

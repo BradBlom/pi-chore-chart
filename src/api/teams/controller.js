@@ -26,9 +26,8 @@ export const getTeam = (req, res) => {
 export const createTeam = (req, res) => {
   try {
     const payload = transformToDb(req.body);
-    const { long_name, short_name, is_active } = payload;
-    const result = db.prepare('INSERT INTO team (long_name, short_name, is_active) VALUES (?, ?, ?)').run(
-      long_name,
+    const { short_name, is_active } = payload;
+    const result = db.prepare('INSERT INTO team (short_name, is_active) VALUES (?, ?)').run(
       short_name,
       is_active === undefined ? 1 : is_active
     );
@@ -42,9 +41,8 @@ export const updateTeam = (req, res) => {
   try {
     const { id } = req.params;
     const payload = transformToDb(req.body);
-    const { long_name, short_name, is_active } = payload;
-    const result = db.prepare('UPDATE team SET long_name = ?, short_name = ?, is_active = ? WHERE id = ?').run(
-      long_name,
+    const { short_name, is_active } = payload;
+    const result = db.prepare('UPDATE team SET short_name = ?, is_active = ? WHERE id = ?').run(
       short_name,
       is_active,
       id

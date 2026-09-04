@@ -188,8 +188,7 @@ function renderSettingsPage() {
   // build rows for members
   const memberRows = currentMembers.map((m) => `
     <tr>
-      <td>${escapeHtml(m.shortName || m.longName || 'Unnamed')}</td>
-      <td>${escapeHtml(m.longName || '')}</td>
+      <td>${escapeHtml(m.shortName || 'Unnamed')}</td>
       <td>
         <button class="w3-button w3-small w3-black" data-resource="member" data-action="edit" data-id="${m.id}">
           <i class="fa fa-edit w3-margin-right w3-text-blue" aria-hidden="true"></i>
@@ -206,8 +205,7 @@ function renderSettingsPage() {
   // build rows for teams
   const teamRows = currentTeams.map((t) => `
     <tr>
-      <td>${escapeHtml(t.shortName || t.longName || 'Unnamed')}</td>
-      <td>${escapeHtml(t.longName || '')}</td>
+      <td>${escapeHtml(t.shortName || 'Unnamed')}</td>
       <td>
         <button class="w3-button w3-small w3-black" data-resource="team" data-action="edit" data-id="${t.id}">
           <i class="fa fa-edit w3-margin-right w3-text-blue" aria-hidden="true"></i>
@@ -266,12 +264,11 @@ function renderSettingsPage() {
           <thead>
             <tr>
               <th>Name</th>
-              <th>Full name</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            ${memberRows || '<tr><td colspan="3">No members found.</td></tr>'}
+            ${memberRows || '<tr><td colspan="2">No members found.</td></tr>'}
           </tbody>
         </table>
       </div>
@@ -290,12 +287,11 @@ function renderSettingsPage() {
           <thead>
             <tr>
               <th>Name</th>
-              <th>Full name</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            ${teamRows || '<tr><td colspan="3">No teams found.</td></tr>'}
+            ${teamRows || '<tr><td colspan="2">No teams found.</td></tr>'}
           </tbody>
         </table>
       </div>
@@ -629,7 +625,7 @@ async function showMemberAssignmentOptions(container, templateId) {
             data-action="select-member-assignment"
             data-member-id="${member.id}"
           >
-            ${escapeHtml(member.longName || member.shortName || 'Unnamed member')}
+            ${escapeHtml(member.shortName || 'Unnamed member')}
           </button>
         `).join('')}
       </div>
@@ -682,7 +678,7 @@ async function showTeamAssignmentOptions(container, templateId) {
             data-action="select-team-assignment"
             data-team-id="${team.id}"
           >
-            ${escapeHtml(team.longName || team.shortName || 'Unnamed team')}
+            ${escapeHtml(team.shortName || 'Unnamed team')}
           </button>
         `).join('')}
       </div>
@@ -771,7 +767,7 @@ async function loadMemberName(memberId, cell) {
 
   if (cachedMember) {
     if (cell) {
-      cell.textContent = cachedMember.longName || cachedMember.shortName || 'Unnamed member';
+      cell.textContent = cachedMember.shortName || 'Unnamed member';
     }
     return;
   }
@@ -784,7 +780,7 @@ async function loadMemberName(memberId, cell) {
 
     const member = await response.json();
     memberPageCache[cacheKey] = member;
-    const displayName = member.longName || member.shortName || 'Unnamed member';
+    const displayName = member.shortName || 'Unnamed member';
     if (cell) {
       cell.textContent = displayName;
     }
@@ -802,7 +798,7 @@ async function loadTeamName(teamId, cell) {
 
   if (cachedTeam) {
     if (cell) {
-      cell.textContent = cachedTeam.longName || cachedTeam.shortName || 'Unnamed team';
+      cell.textContent = cachedTeam.shortName || 'Unnamed team';
     }
     return;
   }
@@ -815,7 +811,7 @@ async function loadTeamName(teamId, cell) {
 
     const team = await response.json();
     teamPageCache[cacheKey] = team;
-    const displayName = team.longName || team.shortName || 'Unnamed team';
+    const displayName = team.shortName || 'Unnamed team';
     if (cell) {
       cell.textContent = displayName;
     }
@@ -879,7 +875,6 @@ function openMemberModal(member = null) {
   const title = document.getElementById('member-modal-title');
   const form = document.getElementById('member-form');
   const shortNameInput = document.getElementById('member-short-name');
-  const longNameInput = document.getElementById('member-long-name');
   const isAdminInput = document.getElementById('member-is-admin');
   const idInput = document.getElementById('member-id');
   const msg = document.getElementById('member-modal-message');
@@ -888,7 +883,6 @@ function openMemberModal(member = null) {
   if (member) {
     title.textContent = 'Edit Member';
     shortNameInput.value = member.shortName || '';
-    longNameInput.value = member.longName || '';
     if (isAdminInput) isAdminInput.checked = Boolean(member.isAdmin || false);
     idInput.value = member.id;
   } else {
@@ -914,7 +908,6 @@ function openTeamModal(team = null) {
   const title = document.getElementById('team-modal-title');
   const form = document.getElementById('team-form');
   const shortNameInput = document.getElementById('team-short-name');
-  const longNameInput = document.getElementById('team-long-name');
   const idInput = document.getElementById('team-id');
   const msg = document.getElementById('team-modal-message');
   if (!modal || !form || !shortNameInput || !idInput || !msg) return;
@@ -922,7 +915,6 @@ function openTeamModal(team = null) {
   if (team) {
     title.textContent = 'Edit Team';
     shortNameInput.value = team.shortName || '';
-    longNameInput.value = team.longName || '';
     idInput.value = team.id;
   } else {
     title.textContent = 'Create Team';
@@ -1039,13 +1031,11 @@ document.getElementById('passcode-form')?.addEventListener('submit', async (even
 document.getElementById('member-form')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const shortNameInput = document.getElementById('member-short-name');
-  const longNameInput = document.getElementById('member-long-name');
   const idInput = document.getElementById('member-id');
   const msg = document.getElementById('member-modal-message');
   if (!shortNameInput || !msg) return;
 
   const shortName = shortNameInput.value.trim();
-  const longName = longNameInput?.value.trim() || '';
   const isAdmin = Boolean(document.getElementById('member-is-admin')?.checked);
 
   if (!shortName) {
@@ -1055,7 +1045,7 @@ document.getElementById('member-form')?.addEventListener('submit', async (event)
     return;
   }
 
-  const payload = { shortName, longName, isActive: 1 };
+  const payload = { shortName, isActive: 1 };
   payload.isAdmin = isAdmin ? 1 : 0;
   const editingId = idInput?.value ? Number(idInput.value) : null;
   const method = editingId ? 'PUT' : 'POST';
@@ -1083,13 +1073,11 @@ document.getElementById('member-form')?.addEventListener('submit', async (event)
 document.getElementById('team-form')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const shortNameInput = document.getElementById('team-short-name');
-  const longNameInput = document.getElementById('team-long-name');
   const idInput = document.getElementById('team-id');
   const msg = document.getElementById('team-modal-message');
   if (!shortNameInput || !msg) return;
 
   const shortName = shortNameInput.value.trim();
-  const longName = longNameInput?.value.trim() || '';
 
   if (!shortName) {
     msg.textContent = 'Please enter a name.';
@@ -1098,7 +1086,7 @@ document.getElementById('team-form')?.addEventListener('submit', async (event) =
     return;
   }
 
-  const payload = { shortName, longName, isActive: 1 };
+  const payload = { shortName, isActive: 1 };
   const editingId = idInput?.value ? Number(idInput.value) : null;
   const method = editingId ? 'PUT' : 'POST';
   const url = editingId ? `/api/teams/${editingId}` : '/api/teams';

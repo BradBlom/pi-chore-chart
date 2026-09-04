@@ -5,13 +5,11 @@ db.pragma('journal_mode = WAL');
 
 const recs_members = {
     alice: {
-        long_name: 'Alice Johnson',
         short_name: 'Alice',
         is_active: 1,
         is_admin: 1
     },
     bob: {
-        long_name: 'Bob Smith',
         short_name: 'Bob',
         is_active: 1,
         is_admin: 0
@@ -20,7 +18,6 @@ const recs_members = {
 
 const recs_team = {
     kitchen: {
-        long_name: 'Kitchen Crew',
         short_name: 'Kitchen',
         is_active: 1
     }
@@ -86,24 +83,24 @@ const recs_chore = {
 
 // Insert sample members
 const memberStmt = db.prepare(`
-  INSERT INTO member (long_name, short_name, is_active, is_admin)
-  VALUES (?, ?, ?, ?)
+  INSERT INTO member (short_name, is_active, is_admin)
+  VALUES (?, ?, ?)
 `);
 Object.keys(recs_members).forEach(key => {
   const member = recs_members[key];
-  const result = memberStmt.run(member.long_name, member.short_name, member.is_active, member.is_admin);
+  const result = memberStmt.run(member.short_name, member.is_active, member.is_admin);
   member.id = result.lastInsertRowid;
   console.log(`Inserted member (${key}) with id:`, member.id);
 });
 
 // Insert sample team
 const teamStmt = db.prepare(`
-  INSERT INTO team (long_name, short_name, is_active)
-  VALUES (?, ?, ?)
+  INSERT INTO team (short_name, is_active)
+  VALUES (?, ?)
 `);
 Object.keys(recs_team).forEach(key => {
   const team = recs_team[key];
-  const result = teamStmt.run(team.long_name, team.short_name, team.is_active);
+  const result = teamStmt.run(team.short_name, team.is_active);
   team.id = result.lastInsertRowid;
   console.log(`Inserted team (${key}) with id:`, team.id);
 });

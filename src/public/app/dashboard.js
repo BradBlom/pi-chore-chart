@@ -97,7 +97,7 @@ function isChoreComplete(chore) {
 }
 
 function getDisplayName(item) {
-  return item.longName || item.long_name || item.name || 'Unnamed';
+  return item.shortName || item.short_name || item.name || 'Unnamed';
 }
 
 function getShortName(item) {
