@@ -65,3 +65,51 @@ function renderStatusCell(chore) {
     </div>
   `;
 }
+
+export function renderChoreListEdit(container, entity, chores, { onRename, onDelete, onCreate }) {
+  const entityName = getDisplayName(entity);
+  const rows = chores.length
+    ? chores.map((chore) => `
+        <tr>
+          <td>${escapeHtml(getChoreName(chore))}</td>
+          <td>
+            <button type="button" class="w3-button w3-small w3-black" data-edit-action="rename" data-chore-id="${chore.id}">
+              <i class="fa fa-edit w3-margin-right w3-text-blue" aria-hidden="true"></i>
+              <span>Rename</span>
+            </button>
+            <button type="button" class="w3-button w3-small w3-black" data-edit-action="delete" data-chore-id="${chore.id}">
+              <i class="fa fa-close w3-margin-right w3-text-red" aria-hidden="true"></i>
+              <span>Delete</span>
+            </button>
+          </td>
+        </tr>
+      `).join('')
+    : '<tr><td colspan="2">No chores found for this item.</td></tr>';
+
+  container.innerHTML = `
+    <div class="w3-row-padding">
+      <div class="w3-col s12">
+        <div class="w3-card w3-padding">
+          <h2 style="margin-top:0">Edit Chore List</h2>
+          <h3 class="w3-text-teal" style="margin-top:0; margin-bottom:0.5rem;">${escapeHtml(entityName)}</h3>
+          <table class="w3-table w3-striped w3-bordered w3-white">
+            <thead><tr><th>Name</th><th>Actions</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <button type="button" class="w3-button w3-black w3-margin-top" data-edit-action="create">
+            <i class="fa fa-plus w3-margin-right w3-text-green" aria-hidden="true"></i>
+            <span>Create</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  container.querySelectorAll('[data-edit-action="rename"]').forEach((button) => {
+    button.addEventListener('click', () => onRename(Number(button.dataset.choreId)));
+  });
+  container.querySelectorAll('[data-edit-action="delete"]').forEach((button) => {
+    button.addEventListener('click', () => onDelete(Number(button.dataset.choreId)));
+  });
+  container.querySelector('[data-edit-action="create"]')?.addEventListener('click', onCreate);
+}

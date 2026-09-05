@@ -62,3 +62,41 @@ export async function updateChore(choreId, payload) {
 
   return response.json();
 }
+
+export async function createChore(payload) {
+  const response = await fetch('/api/chores', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to create chore');
+  }
+
+  return response.json();
+}
+
+export async function renameChore(choreId, name) {
+  const response = await fetch(`/api/chores/${encodeURIComponent(choreId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to rename chore');
+  }
+
+  return response.json();
+}
+
+export async function deleteChore(choreId) {
+  const response = await fetch(`/api/chores/${encodeURIComponent(choreId)}`, {
+    method: 'DELETE'
+  });
+
+  if (!response.ok) {
+    throw new Error('Unable to delete chore');
+  }
+}

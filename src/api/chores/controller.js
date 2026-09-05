@@ -63,17 +63,25 @@ export const updateChore = (req, res) => {
   }
 };
 
-export const patchChoreStatus = (req, res) => {
+export const patchChore = (req, res) => {
   try {
     const { id } = req.params;
     const payload = transformToDb(req.body);
+    const supportedFields = ['status', 'name'];
+    const payloadFields = payload && typeof payload === 'object' ? Object.keys(payload) : [];
+    const updateFields = supportedFields.filter((field) => Object.prototype.hasOwnProperty.call(payload || {}, field));
 
-    if (!payload || typeof payload !== 'object' || !Object.prototype.hasOwnProperty.call(payload, 'status') || Object.keys(payload).length !== 1) {
-      return res.status(400).json({ error: 'Only the status field can be updated' });
+    if (!updateFields.length || payloadFields.some((field) => !supportedFields.includes(field))) {
+      return res.status(400).json({ error: 'The status and/or name field must be provided' });
     }
 
-    const { status } = payload;
-    const result = db.prepare('UPDATE chore SET status = ? WHERE id = ?').run(status, id);
+    const values = updateFields.map((field) => field === 'name' ? String(payload[field]).trim() : payload[field]);
+    if (Object.prototype.hasOwnProperty.call(payload, 'name') && !values[updateFields.indexOf('name')]) {
+      return res.status(400).json({ error: 'The name cannot be empty' });
+    }
+
+    const assignments = updateFields.map((field) => `${field} = ?`).join(', ');
+    const result = db.prepare(`UPDATE chore SET ${assignments} WHERE id = ?`).run(...values, id);
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Chore not found' });
     }
