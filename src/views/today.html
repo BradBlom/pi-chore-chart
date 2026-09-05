@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Chore List - Chore Chart</title>
+<title>Today - Chore Chart</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
 <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
 html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
 </style>
@@ -18,27 +17,18 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
   <div class="w3-bar w3-theme w3-top w3-left-align w3-large">
     <a href="#" class="w3-bar-item w3-button w3-theme-l1">Chore Chart</a>
     <div class="w3-right">
+      <span class="w3-bar-item w3-button w3-dark-grey" aria-current="page">Today</span>
+      <a href="/app/history" class="w3-bar-item w3-button w3-hover-white">History</a>
+      <a href="/app/settings" class="w3-bar-item w3-button w3-hover-white">Settings</a>
       <a href="/app/dashboard" class="w3-bar-item w3-button w3-hover-white">Back to Dashboard</a>
     </div>
   </div>
 </div>
 
-<div class="w3-main">
-  <div
-    id="chore-list-content"
-    class="w3-container w3-padding-32"
-    data-entity-type="{{entityType}}"
-    data-entity-id="{{entityId}}"
-    data-entity-label="{{entityLabel}}"
-  ></div>
+<main class="w3-main">
+  <div id="today-content" class="w3-container w3-padding-32"></div>
+</main>
 
-  <footer id="myFooter">
-    <div class="w3-container w3-theme-l1">
-      <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
-    </div>
-  </footer>
-</div>
-
-<script type="module" src="/app/chore-list.js"></script>
+<script type="module" src="/app/today.js"></script>
 </body>
 </html>

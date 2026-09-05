@@ -24,12 +24,33 @@ router.get('/settings', (req, res) => {
   res.sendFile(join(__dirname, '../views/settings.html'));
 });
 
+router.get('/today', (req, res) => {
+  res.sendFile(join(__dirname, '../views/today.html'));
+});
+
+router.get('/history', (req, res) => {
+  res.sendFile(join(__dirname, '../views/history.html'));
+});
+
 router.get('/:type/:id/chore-list', (req, res) => {
   const entityType = req.params.type === 'member' || req.params.type === 'members' ? 'members' : 'teams';
   const entityLabel = entityType === 'members' ? 'member' : 'team';
   const entityId = req.params.id;
 
   let html = readFileSync(join(__dirname, '../views/chore-list.html'), 'utf8');
+  html = html.replace('{{entityType}}', entityType);
+  html = html.replace('{{entityId}}', entityId);
+  html = html.replace('{{entityLabel}}', entityLabel);
+
+  res.send(html);
+});
+
+router.get('/:type/:id/chore-list-edit', (req, res) => {
+  const entityType = req.params.type === 'member' || req.params.type === 'members' ? 'members' : 'teams';
+  const entityLabel = entityType === 'members' ? 'member' : 'team';
+  const entityId = req.params.id;
+
+  let html = readFileSync(join(__dirname, '../views/chore-list-edit.html'), 'utf8');
   html = html.replace('{{entityType}}', entityType);
   html = html.replace('{{entityId}}', entityId);
   html = html.replace('{{entityLabel}}', entityLabel);

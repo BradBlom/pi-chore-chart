@@ -19,7 +19,10 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
   <div class="w3-bar w3-theme w3-top w3-left-align w3-large">
     <a href="#" class="w3-bar-item w3-button w3-theme-l1">Chore Chart</a>
     <div class="w3-right">
-      <a href="/app/dashboard" class="w3-bar-item w3-button w3-hover-white">Back</a>
+      <a href="/app/today" class="w3-bar-item w3-button w3-hover-white">Today</a>
+      <a href="/app/history" class="w3-bar-item w3-button w3-hover-white">History</a>
+      <span class="w3-bar-item w3-button w3-dark-grey" aria-current="page">Settings</span>
+      <a href="/app/dashboard" class="w3-bar-item w3-button w3-hover-white">Back to Dashboard</a>
     </div>
   </div>
 </div>
@@ -28,10 +31,6 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
   <div id="settings-content" class="w3-container w3-padding-32"></div>
 
   <footer id="myFooter">
-    <div class="w3-container w3-theme-l2 w3-padding-32">
-      <h4>Footer</h4>
-    </div>
-
     <div class="w3-container w3-theme-l1">
       <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
     </div>
@@ -146,23 +145,23 @@ html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
     </div>
   </div>
 
-<div id="assignment-modal" class="w3-modal" style="display:none">
-  <div class="w3-modal-content w3-card-4 w3-animate-zoom">
-    <header class="w3-container w3-theme">
-      <span class="w3-button w3-display-topright" onclick="closeAssignmentModal()">&times;</span>
-      <h2 id="assignment-modal-title">Chore Template Assignments</h2>
-    </header>
+  <div id="assignment-modal" class="w3-modal" style="display:none">
+    <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+      <header class="w3-container w3-theme">
+        <span class="w3-button w3-display-topright" onclick="closeAssignmentModal()">&times;</span>
+        <h2 id="assignment-modal-title">Chore Template Assignments</h2>
+      </header>
 
-    <div class="w3-container w3-padding">
-      <div id="assignment-template-info" class="w3-panel w3-white w3-border w3-margin-bottom"></div>
-      <div id="assignment-list" class="w3-panel w3-white w3-border w3-margin-bottom" style="display:none"></div>
+      <div class="w3-container w3-padding">
+        <div id="assignment-template-info" class="w3-panel w3-white w3-border w3-margin-bottom"></div>
+        <div id="assignment-list" class="w3-panel w3-white w3-border w3-margin-bottom" style="display:none"></div>
+      </div>
+
+      <footer class="w3-container w3-padding w3-border-top">
+        <button type="button" class="w3-button w3-white w3-border" onclick="closeAssignmentModal()">Close</button>
+      </footer>
     </div>
-
-    <footer class="w3-container w3-padding w3-border-top">
-      <button type="button" class="w3-button w3-white w3-border" onclick="closeAssignmentModal()">Close</button>
-    </footer>
   </div>
-</div>
 
 <script src="./settings.js"></script>
 </body>
